@@ -306,6 +306,12 @@ static CImg<float>* ph_dct_matrix(const int N);
 //int ph_dct_imagehash(const char* file, ulong64 &hash);
 int __declspec(dllexport) ph_dct_imagehash(const char* file, ulong64 &hash);
 
+int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *file, ulong64 &hash);
+
+void __declspec(dllexport) ph_startup();
+
+void __declspec(dllexport) ph_shutdown();
+
 int ph_bmb_imagehash(const char *file, uint8_t method, BinHash **ret_hash);
 #endif
 

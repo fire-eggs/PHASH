@@ -27,6 +27,9 @@ D Grant Starkweather - dstarkweather@phash.org
 #include "config.h"
 #else
 #define snprintf _snprintf
+#include <gdiplus.h>
+using namespace Gdiplus;
+#pragma comment (lib,"Gdiplus.lib") // linker resolution
 #endif
 #ifdef HAVE_VIDEO_HASH
 #include "cimgffmpeg.h"
@@ -514,13 +517,162 @@ int ph_bmb_imagehash(const char *file, uint8_t method, BinHash **ret_hash)
     return 0;
 }
 
-int __declspec(dllexport) ph_dct_imagehash(const char* file, ulong64 &hash){
+// Bitmap -> CImg courtesy of Ken Earle
+// http://www.dewtell.com/code/cpp/cimggdip.htm
+//
+// TODO is not copying the Alpha channel
+// TODO need to use CImg<T>, not a hard-coded type
+//
+int FillCImgFromBitmap(CImg<uint8_t> & img, Bitmap *bm)
+{
+	int          width = img.width();
+	int          height = img.height();
 
-//int ph_dct_imagehash(const char* file, ulong64 &hash){
+	// Step through cimg and bitmap, copy values from bitmap to img.
+	const int nPlanes = 4; // NOTE we assume alpha plane is the 4th plane.
+	Rect        rc(0, 0, width, height);
+	// LockBits on source
+	BitmapData dataSrc;
+	Status s = bm->LockBits(&rc, ImageLockModeRead, PixelFormat32bppARGB, &dataSrc);
+	if (s != Ok) return -1;
+
+	BYTE * pStartSrc = (BYTE *)dataSrc.Scan0;
+
+	UINT nLines = dataSrc.Height;        // number of lines
+	UINT nPixels = dataSrc.Width;        // number of pixels per line
+	UINT dPixelSrc = nPlanes;            // pixel step in source
+	UINT dLineSrc = dataSrc.Stride;      // line step in source
+
+	BYTE * pLineSrc = pStartSrc;
+
+	for (UINT y = 0; y < nLines; y++)    // loop through lines
+	{
+		BYTE    *pPixelSrc = pLineSrc;
+
+		for (UINT x = 0; x < nPixels; x++) // loop through pixels on line
+		{
+			BYTE    redComp = *(pPixelSrc + 2);
+			BYTE    greenComp = *(pPixelSrc + 1);
+			BYTE    blueComp = *(pPixelSrc + 0);
+
+			img(x, y, 0, 0) = uint8_t(redComp);  // TODO will bit-twiddling be faster?
+			img(x, y, 0, 1) = uint8_t(greenComp);
+			img(x, y, 0, 2) = uint8_t(blueComp);
+			pPixelSrc += dPixelSrc;
+		}
+		pLineSrc += dLineSrc;
+	}
+	bm->UnlockBits(&dataSrc);
+
+	return 0;
+}
+
+int _ph_dct_doimagehash(CImg<uint8_t> *src, ulong64 &hash)
+{
+	CImg<float> meanfilter(7, 7, 1, 1, 1);
+	CImg<float> img;
+	if (src->spectrum() == 3){
+		img = src->RGBtoYCbCr().channel(0).get_convolve(meanfilter);
+	}
+	else if (src->spectrum() == 4){
+		int width = img.width();
+		int height = img.height();
+		int depth = img.depth();
+		img = src->crop(0, 0, 0, 0, width - 1, height - 1, depth - 1, 2).RGBtoYCbCr().channel(0).get_convolve(meanfilter);
+	}
+	else {
+		img = src->channel(0).get_convolve(meanfilter);
+	}
+
+	img.resize(32, 32);
+	CImg<float> *C = ph_dct_matrix(32);
+	CImg<float> Ctransp = C->get_transpose();
+
+	CImg<float> dctImage = (*C)*img*Ctransp;
+
+	CImg<float> subsec = dctImage.crop(1, 1, 8, 8).unroll('x');;
+
+	float median = subsec.median();
+	ulong64 one = 0x0000000000000001;
+	hash = 0x0000000000000000;
+	for (int i = 0; i< 64; i++){
+		float current = subsec(i);
+		if (current > median)
+			hash |= one;
+		one = one << 1;
+	}
+
+	delete C;
+	return 0;
+}
+
+int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &hash)
+{
+	if (!filename)	return -1;
+
+	Bitmap *gdiBmp = new Bitmap(filename);
+	if (gdiBmp == NULL) return -1;
+
+	int bmpW = gdiBmp->GetWidth();
+	int bmpH = gdiBmp->GetHeight();
+
+	if (bmpW < 1 || bmpH < 1) return -1;
+
+	CImg<uint8_t> src(bmpW, bmpH, 1, 3); // TODO should be 4 for spectrum?
+
+	if (FillCImgFromBitmap(src, gdiBmp) < 0) return -1;
+
+	int res = _ph_dct_doimagehash(&src, hash);
+
+	//BitmapData bitmapData;
+	//gdiBmp->LockBits(&Rect(0, 0, bmpW, bmpH), ImageLockModeRead, PixelFormat32bppARGB, &bitmapData);
+
+	//int spectrum = -1;
+	//switch (bitmapData.PixelFormat)
+	//{
+	//case PixelFormat8bppIndexed:
+	//	spectrum = 1;
+	//	break;
+	//case PixelFormat24bppRGB:
+	//	spectrum = 3;
+	//	break;
+	//case PixelFormat32bppARGB:
+	//	spectrum = 4;
+	//	break;
+	//}
+
+	//UINT32 *pRaw = (UINT32*)bitmapData.Scan0;
+	//UINT32 *scan = pRaw;
+
+
+
+
+	//int colorIndex = 0;
+	//for (int y = 0; y < bmpH; y++)
+	//{
+	//	for (int x = 0; x < bmpW; x++)
+	//	{
+	//		UINT32 color = *(scan + x);
+	//		//rchan[colorIndex] = (unsigned char)(color & 0xff);
+	//		//gchan[colorIndex] = (unsigned char)((color & 0xff00) >> 8);
+	//		//bchan[colorIndex] = (unsigned char)((color & 0xff0000) >> 16);
+	//		colorIndex++;
+	//	}
+	//	scan += bitmapData.Stride / 4;
+	//}
+
+//	gdiBmp->UnlockBits(&bitmapData);
+	delete gdiBmp;
+	return res;
+}
+
+int __declspec(dllexport) ph_dct_imagehash(const char* file, ulong64 &hash)
+{
 
     if (!file){
         return -1;
     }
+
     CImg<uint8_t> src;
     try {
         src.load(file);
@@ -1303,5 +1455,20 @@ TxtMatch* ph_compare_text_hashes(TxtHashPoint *hash1, int N1, TxtHashPoint *hash
         }
     }
     return found_matches;
+}
+
+
+static ULONG_PTR gdiplusToken;
+
+void __declspec(dllexport) ph_startup()
+{
+	GdiplusStartupInput gdiplusStartupInput;
+	// Initialize GDI+.
+	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+}
+
+void __declspec(dllexport) ph_shutdown()
+{
+	GdiplusShutdown(gdiplusToken);
 }
 

@@ -9,10 +9,15 @@
 #include "dirent.h"
 #include <sys/stat.h>
 
+
 extern "C" {
-	//__declspec(dllimport) 
+	// TODO header
+	// Access to the phash library methods
 		extern int ph_dct_imagehash(const char* file, unsigned long long &hash);
+		extern int ph_dct_imagehashW(wchar_t *filename, unsigned long long &hash);
 		int ph_hamming_distance(unsigned long long hash1, unsigned long long hash2);
+		extern void ph_startup();
+		extern void ph_shutdown();
 }
 
 //extern "C" int phash_hamming_distance(const unsigned long long hash1, const unsigned long long hash2)
@@ -42,9 +47,24 @@ unsigned long long do_hash(char *filename)
 	return hash;
 }
 
+unsigned long long do_hash2(char *filename)
+{
+	const size_t cSize = strlen(filename) + 1;
+	wchar_t *wc = new wchar_t[cSize];
+	//std::wstring wc(cSize, L'#');
+	//mbstowcs(&wc[0], filename, cSize);
+	size_t outSize;
+	mbstowcs_s(&outSize, wc, cSize, filename, cSize-1);
+
+	unsigned long long hash;
+	if (ph_dct_imagehashW(wc, hash) < 0)
+		return -1;
+	return hash;
+}
+
 struct entry
 {
-	char name[256];
+	char name[256]; // TODO convert to wchar_t
 	unsigned long long hash;
 };
 
@@ -84,14 +104,30 @@ bool hasEnding(std::string const &fullString, std::string const &ending)
 // TODO output the filestring MINUS the base path.
 void processFile(char *filepath, char *basepath, FILE *fp)
 {
-	if (!hasEnding(filepath, ".jpg"))
-		return; // jpeg only
-
-	unsigned long long tmpHash = do_hash(filepath);
+	unsigned long long tmpHash = do_hash2(filepath);
 	if (tmpHash < 0)
-		return; // failure?
-
+		return;
 	fprintf(fp, "%llu|%s\n", tmpHash, filepath);
+
+	if (false)
+	{
+		if (!hasEnding(filepath, ".jpg"))
+			return; // jpeg only
+
+		unsigned long long tmpHash = do_hash(filepath);
+		if (tmpHash < 0)
+			return; // failure?
+
+		unsigned long long tmpHash2 = do_hash2(filepath); // TODO need to get original filename as wchar_t
+
+		// TODO tmpHash and tmpHash2 must match
+		if (tmpHash != tmpHash2)
+		{
+			__debugbreak();
+		}
+
+		fprintf(fp, "%llu|%s\n", tmpHash, filepath);
+	}
 }
 
 // Process a directory tree: for each jpg file, calculate the phash,
@@ -130,6 +166,9 @@ void processTree(char *path, char *basepath, FILE *fp)
 	closedir(srcdir);
 }
 
+void startup() { ph_startup(); }
+void shutdown() { ph_shutdown(); }
+
 int main(int argc, char *argv[])
 {
 	if (argc < 2)
@@ -138,16 +177,24 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	char filepath[257];
-	sprintf(filepath, "%s\\trial.phash", argv[1]);
+	startup();
 
-	FILE *fp;
-	fopen_s(&fp, filepath, "w+");
-	fprintf(fp, "%s\n", argv[1]);
+	__try
+	{
+		char filepath[257];
+		sprintf(filepath, "%s\\trial.phash", argv[1]);
 
-	processTree("", argv[1], fp);
-	fclose(fp);
+		FILE *fp;
+		fopen_s(&fp, filepath, "w+");
+		fprintf(fp, "%s\n", argv[1]);
 
+		processTree("", argv[1], fp);
+		fclose(fp);
+	}
+	__finally
+	{
+		shutdown();
+	}
 	return 1;
 }
 
