@@ -2116,6 +2116,23 @@ namespace pixel
 
         #region Internal Static Functions
 
+        public static int GetPixelSize(Bitmap image)
+        {
+            switch (image.PixelFormat)
+            {
+                case PixelFormat.Format24bppRgb:
+                    return 3;
+                case PixelFormat.Format32bppArgb:
+                case PixelFormat.Format32bppPArgb:
+                case PixelFormat.Format32bppRgb:
+                    return 4;
+                case PixelFormat.Format8bppIndexed:
+                    return 1;
+                default:
+                    throw new ArgumentException("unhandled image format");
+            }
+        }
+
         public static int GetPixelSize(BitmapData Data)
         {
             if (Data == null)
@@ -2129,8 +2146,8 @@ namespace pixel
                 case PixelFormat.Format32bppRgb:
                     return 4;
                 // 2011/12/17 this isn't working: resulting in 'black' pixels for many monochrome images
-                //case PixelFormat.Format8bppIndexed:
-                //    return 1;
+//                case PixelFormat.Format8bppIndexed:
+//                    return 1;
                 default:
                     throw new ArgumentException("unhandled image format");
             }
@@ -2222,13 +2239,32 @@ namespace pixel
             if (!IsGraphic(fileName1) || !IsGraphic(fileName2))
                 return new Bitmap(1, 1);
 
-            using (var tempImage1 = new Bitmap(fileName1))
+            Bitmap tempImage1 = new Bitmap(fileName1);
+            Bitmap tempImage2 = new Bitmap(fileName2);
+
+            if (GetPixelSize(tempImage1) == 1)
+                tempImage1 = ConvertTo24(tempImage1);
+            if (GetPixelSize(tempImage2) == 1)
+                tempImage2 = ConvertTo24(tempImage2);
+
+            Bitmap res = kbrDiff(tempImage1, tempImage2, stretch);
+
+            tempImage1.Dispose(); // TODO really need a try..finally
+            tempImage2.Dispose();
+            return res;
+        }
+
+        private static Bitmap ConvertTo24(Bitmap bmpIn)
+        {
+            Bitmap converted = new Bitmap(bmpIn.Width, bmpIn.Height, PixelFormat.Format24bppRgb);
+            using (Graphics g = Graphics.FromImage(converted))
             {
-                using (var tempImage2 = new Bitmap(fileName2))
-                {
-                    return kbrDiff(tempImage1, tempImage2, stretch);
-                }
+                // Prevent DPI conversion
+                g.PageUnit = GraphicsUnit.Pixel;
+                // Draw the image
+                g.DrawImageUnscaled(bmpIn, 0, 0);
             }
+            return converted;
         }
 
         // Diff two images which are the same dimensions
