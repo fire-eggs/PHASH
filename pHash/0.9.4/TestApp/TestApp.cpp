@@ -58,7 +58,7 @@ unsigned long long do_hash2(char *filename)
 
 	unsigned long long hash;
 	if (ph_dct_imagehashW(wc, hash) < 0)
-		return -1;
+		return 0;
 	return hash;
 }
 
@@ -105,7 +105,7 @@ bool hasEnding(std::string const &fullString, std::string const &ending)
 void processFile(char *filepath, char *basepath, FILE *fp)
 {
 	unsigned long long tmpHash = do_hash2(filepath);
-	if (tmpHash < 0)
+	if (tmpHash <= 0)
 		return;
 	fprintf(fp, "%llu|%s\n", tmpHash, filepath);
 
