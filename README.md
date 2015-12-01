@@ -13,3 +13,14 @@ Load a file from phase 1 into a viewer. It compares all image phash values and s
 Uploaded the code for phase 1. The initial check-in uses CImg to load files; due to various issues it is limited to JPG files only.
 
 Today's update is to replace using CImg to load the files with GDI+. As a result, GIF, PNG, TIFF and BMP files are now supported. Preliminary testing suggests GDI+ is about 25% faster than CImg/libjpeg.
+
+20151129:
+Uploaded the code for the viewer. This version is WinForms/C#. The code has a bit of historic cruft to be removed...
+
+20151201:
+Upgraded the Phase 1 code/project to use OpenMP for parallelism. Each file will be processed in its own thread.
+
+Timed on my physical machine, processing a directory tree containing 940 images at 196M in size.
+Non-OpenMP: 105.66 seconds
+    OpenMP:  28.36 seconds
+Your mileage may vary, depending on the number of processors you have ...
