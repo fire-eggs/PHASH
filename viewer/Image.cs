@@ -2243,28 +2243,15 @@ namespace pixel
             Bitmap tempImage2 = new Bitmap(fileName2);
 
             if (GetPixelSize(tempImage1) == 1)
-                tempImage1 = ConvertTo24(tempImage1);
+                tempImage1 = new Bitmap(tempImage1); // upscale to 24-bit
             if (GetPixelSize(tempImage2) == 1)
-                tempImage2 = ConvertTo24(tempImage2);
+                tempImage2 = new Bitmap(tempImage2); // upscale to 24-bit
 
             Bitmap res = kbrDiff(tempImage1, tempImage2, stretch);
 
             tempImage1.Dispose(); // TODO really need a try..finally
             tempImage2.Dispose();
             return res;
-        }
-
-        private static Bitmap ConvertTo24(Bitmap bmpIn)
-        {
-            Bitmap converted = new Bitmap(bmpIn.Width, bmpIn.Height, PixelFormat.Format24bppRgb);
-            using (Graphics g = Graphics.FromImage(converted))
-            {
-                // Prevent DPI conversion
-                g.PageUnit = GraphicsUnit.Pixel;
-                // Draw the image
-                g.DrawImageUnscaled(bmpIn, 0, 0);
-            }
-            return converted;
         }
 
         // Diff two images which are the same dimensions
