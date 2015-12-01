@@ -169,6 +169,34 @@ void processTree(char *path, char *basepath, FILE *fp)
 void startup() { ph_startup(); }
 void shutdown() { ph_shutdown(); }
 
+bool exists(const std::string& name) 
+{
+	struct stat buffer;
+	return (stat(name.c_str(), &buffer) == 0);
+}
+
+void doit(char *filename)
+{
+	startup();
+
+	__try
+	{
+		char filepath[257];
+		sprintf(filepath, "%s\\trial.phash", filename);
+
+		FILE *fp;
+		fopen_s(&fp, filepath, "w+");
+		fprintf(fp, "%s\n", filename);
+
+		processTree("", filename, fp);
+		fclose(fp);
+	}
+	__finally
+	{
+		shutdown();
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	if (argc < 2)
@@ -177,24 +205,14 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	startup();
-
-	__try
+	if (!exists(argv[1]))
 	{
-		char filepath[257];
-		sprintf(filepath, "%s\\trial.phash", argv[1]);
-
-		FILE *fp;
-		fopen_s(&fp, filepath, "w+");
-		fprintf(fp, "%s\n", argv[1]);
-
-		processTree("", argv[1], fp);
-		fclose(fp);
+		printf("ERROR: path <%s> doesn't exist!\n", argv[1]);
+		return 1;
 	}
-	__finally
-	{
-		shutdown();
-	}
+
+	doit(argv[1]);
+
 	return 1;
 }
 
