@@ -9,6 +9,7 @@
 #include "dirent.h"
 #include <sys/stat.h>
 
+#include "omp.h"
 
 extern "C" {
 	// TODO header
@@ -130,10 +131,16 @@ void processFile(char *filepath, char *basepath, FILE *fp)
 	}
 }
 
+#include <string>
+#include <list>
+
 // Process a directory tree: for each jpg file, calculate the phash,
 // and write the hash value and file string to the output file.
-void processTree(char *path, char *basepath, FILE *fp)
+void processTree(const char *path, char *basepath, FILE *fp)
 {
+	std::list<std::string> folders;
+	std::vector<std::string> files;
+
 	char thispath[257];
 	char apath[257];
 
@@ -156,17 +163,35 @@ void processTree(char *path, char *basepath, FILE *fp)
 		if (st.st_mode & _S_IFDIR) // recurse into subdirectories
 		{
 			sprintf(apath, "%s\\%s", path, dent->d_name);
-			processTree(apath, basepath, fp);
+			folders.push_back(apath);
+//			processTree(apath, basepath, fp);
 		}
 		else
 		{
-			processFile(apath, basepath, fp);
+			files.push_back(apath);
+//			processFile(apath, basepath, fp);
 		}
 	}
 	closedir(srcdir);
+
+	int max = files.size();
+#pragma omp parallel for
+	for (int dex = 0; dex < max; dex++)
+	{
+		processFile((char *)(files[dex].c_str()), basepath, fp);
+	}
+	for (std::list<std::string>::iterator it = folders.begin(); it != folders.end(); ++it)
+	{
+		processTree((*it).c_str(), basepath, fp);
+	}
 }
 
-void startup() { ph_startup(); }
+void startup() 
+{ 
+//	omp_set_num_threads(2);
+	ph_startup(); 
+}
+
 void shutdown() { ph_shutdown(); }
 
 bool exists(const std::string& name) 
