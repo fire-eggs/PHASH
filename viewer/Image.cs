@@ -2303,8 +2303,7 @@ namespace pixel
                 if (!stretch)
                     throw new InvalidDataException("Size mismatch");
 
-                // TODO RESIZE HERE
-
+                // resize
                 int newH = Math.Max(image1.Height, image2.Height);
                 int newW = Math.Max(image1.Width, image2.Width);
                 Bitmap newImage1 = ResizeImage(image1, newW, newH);

@@ -112,7 +112,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Image.cs" />
-    <Compile Include="ImageComparer.cs" />
     <Compile Include="ImageProcessor.cs" />
     <Compile Include="Pixelate.cs" />
     <Compile Include="Settings1.Designer.cs">
