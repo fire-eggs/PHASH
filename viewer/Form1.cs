@@ -22,13 +22,14 @@ namespace pixel
         private ShowDiff _diffDlg; // to retain context data
 
         private int _counter;
-        private List<string> _errors;
 
         private const int PIX_COUNT = 10; // number of "pixels" across/down 
         private const int THRESHOLD = 2000;
         private const double FTHRESHOLD = 0.7;
 
         private string _logPath;
+
+        // TODO means to view the log
 
         public void log(string msg)
         {
@@ -93,29 +94,31 @@ namespace pixel
 
         private void Form1_DragDrop(object sender, DragEventArgs e)
         {
-            string path = DropPath(e);
-            if (path != null)
-            {
-                ProcessPath(path);//threadProcessPath(path);
-            }
-            else
-            {
-                path = DropCID(e);
-                if (path == null)
-                {
-                    path = DropFCID(e);
-                    if (path == null)
-                        return;
-                    ProcessFCID(path);
-                }
-                else
-                    ProcessCID(path);                // load CID
-            }
+            MessageBox.Show("drag-and-drop currently unsupported");
+            //string path = DropPath(e);
+            //if (path != null)
+            //{
+            //    ProcessPath(path);//threadProcessPath(path);
+            //}
+            //else
+            //{
+            //    path = DropCID(e);
+            //    if (path == null)
+            //    {
+            //        path = DropFCID(e);
+            //        if (path == null)
+            //            return;
+            //        ProcessFCID(path);
+            //    }
+            //    else
+            //        ProcessCID(path);                // load CID
+            //}
         }
 
         private bool IsValidDrop(DragEventArgs e)
         {
-            return (DropPath(e) != null || DropCID(e) != null || DropFCID(e) != null);
+            return false; // TODO used to be able to process a path, CID or FCID
+            //return (DropPath(e) != null || DropCID(e) != null || DropFCID(e) != null);
         }
 
         private string DropPath(DragEventArgs e)
@@ -1122,12 +1125,6 @@ namespace pixel
             }
         }
 
-        //private static int Clamp(int value, int max, int min)
-        //{
-        //    value = value > max ? max : value;
-        //    return value < min ? min : value;
-        //}
-
         private void BtnLeftAsDup_Click(object sender, EventArgs e)
         {
             // rename the 'left' image as a dup of the right
@@ -1154,42 +1151,6 @@ namespace pixel
             string p2 = Path.GetFileName(res.FileLeft.Name);
             // name becomes path\dup#_file.ext
             moveFile(@"{0}\dup{1}_{2}", p1, p2, res.FileRight.Name, true);
-        }
-
-        // Create a CID file for all images in tree
-        private void CreateCIDToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var fbd = new FolderBrowserDialog(); // TODO earlier path memory?
-            if (DialogResult.OK != fbd.ShowDialog())
-            {
-                return;
-            }
-
-            string path = fbd.SelectedPath;
-            //string outf = path + @"\test.cid";
-
-            //var outputF = new StreamWriter(outf);
-            //threadProcessFiles(path, outputF, processFile);
-            ProcessPath(path);//threadProcessPath(path);
-        }
-
-        // Load and process a CID file
-        private void LoadCIDToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var ofd = new OpenFileDialog();
-            ofd.Multiselect = false;
-            ofd.Filter = "FCID files (*.fcid)|*.fcid|CID files (*.cid)|*.cid|All files (*.*)|*.*";
-            ofd.FilterIndex = 1;
-            ofd.DefaultExt = "FCID";
-            ofd.CheckFileExists = true;
-            if (DialogResult.OK != ofd.ShowDialog(this))
-            {
-                return;
-            }
-            if (Path.GetExtension(ofd.FileName).ToUpper().Contains("FCID"))
-                ProcessFCID(ofd.FileName);
-            else
-                ProcessCID(ofd.FileName);
         }
 
         private void ClearToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1402,7 +1363,6 @@ namespace pixel
 
         private void loadPHashToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // early experimental to try out phash
             // a phash file consists of:
             // 1. the base path (e.g. "e:\test")
             // 2. a series of lines of the form:
@@ -1428,7 +1388,7 @@ namespace pixel
             pictureBox1.ImageLocation = "";
             pictureBox2.ImageLocation = "";
 
-            _cidCount++; // loading (another) CID
+            _cidCount++; // loading (another) PHASH
 
             _guiContext = TaskScheduler.FromCurrentSynchronizationContext();
             _oldColor = statusStrip1.BackColor;
@@ -1518,69 +1478,7 @@ namespace pixel
             }
         }
 
-
-        // test variant one. 
-        //private void ParsePHash(string filename)
-        //{
-        //    char[] splitChars = { ':' };
-        //    _viewList = new List<Pair>();
-
-        //    //            var token = Task.Factory.CancellationToken;
-        //    //            Task.Factory.StartNew(() => { ShowStatus("Loading PHASH"); }, token, TaskCreationOptions.None, _guiContext);
-
-        //    bool firstLine = true;
-        //    using (FileStream fs = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-        //    {
-        //        using (BufferedStream bs = new BufferedStream(fs))
-        //        {
-        //            using (StreamReader sr = new StreamReader(bs))
-        //            {
-        //                string line;
-        //                while ((line = sr.ReadLine()) != null)
-        //                {
-        //                    if (firstLine)
-        //                    {
-        //                        // First line contains base path
-        //                        _data.BasePath = line.Trim();
-        //                        firstLine = false;
-        //                        continue;
-        //                    }
-
-        //                    var parts2 = line.Split(splitChars);
-        //                    Pair p = new Pair();
-        //                    p.Val = int.Parse(parts2[0]);
-        //                    p.FVal = p.Val / 100.0;
-        //                    FileData fd = new FileData();
-        //                    fd.Name = _data.BasePath + @"\" + parts2[1].Trim();
-        //                    fd.Source = _cidCount;
-        //                    p.FileLeft = fd;
-        //                    fd = new FileData();
-        //                    fd.Name = _data.BasePath + @"\" + parts2[2].Trim();
-        //                    fd.Source = _cidCount;
-        //                    p.FileRight = fd;
-        //                    _viewList.Add(p);
-
-
-        //                    //FileData fd = new FileData
-        //                    //{
-        //                    //    Name = name,
-        //                    //    FVals = parts2.Select(s => double.Parse(s)).ToArray(),
-        //                    //    Source = _cidCount
-        //                    //};
-        //                    //if (fd.Name == null || fd.FVals == null)
-        //                    //    continue;
-
-        //                    //_data.Add(fd);
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    setListbox();
-        //    //            Task.Factory.StartNew(ThreadCompareFFiles).ContinueWith(_ => ThreadCompareDone(), _guiContext);
-        //}
-
-
+        // copied and adapted from the phash codebase [TODO consider p/invoking the C dll?]
         int phash_ham_dist(ulong hash1, ulong hash2)
         {
             ulong x = hash1 ^ hash2;
@@ -1595,19 +1493,5 @@ namespace pixel
             x = (x + (x >> 4)) & m4;
             return (int)((x * h01) >> 56);
         }
-
-        //extern "C" int phash_hamming_distance(const unsigned long long hash1, const unsigned long long hash2)
-        //{
-        //	unsigned long long x = hash1^hash2;
-        //	const unsigned long long m1 = 0x5555555555555555ULL;
-        //	const unsigned long long m2 = 0x3333333333333333ULL;
-        //	const unsigned long long h01 = 0x0101010101010101ULL;
-        //	const unsigned long long m4 = 0x0f0f0f0f0f0f0f0fULL;
-        //	x -= (x >> 1) & m1;
-        //	x = (x & m2) + ((x >> 2) & m2);
-        //	x = (x + (x >> 4)) & m4;
-        //	return (x * h01) >> 56;
-        //}
-
     }
 }

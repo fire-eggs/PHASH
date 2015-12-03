@@ -29,8 +29,7 @@ namespace pixel
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.createCIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadCIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadPHashToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,7 +51,6 @@ namespace pixel
             this.btnMoveLeft = new System.Windows.Forms.Button();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.filenamesToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadPHashToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.menuStrip1.SuspendLayout();
@@ -115,8 +113,6 @@ namespace pixel
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.createCIDToolStripMenuItem,
-            this.loadCIDToolStripMenuItem,
             this.loadPHashToolStripMenuItem,
             this.clearToolStripMenuItem,
             this.exitToolStripMenuItem});
@@ -124,19 +120,12 @@ namespace pixel
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
-            // createCIDToolStripMenuItem
+            // loadPHashToolStripMenuItem
             // 
-            this.createCIDToolStripMenuItem.Name = "createCIDToolStripMenuItem";
-            this.createCIDToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.createCIDToolStripMenuItem.Text = "Create CID";
-            this.createCIDToolStripMenuItem.Click += new System.EventHandler(this.CreateCIDToolStripMenuItem_Click);
-            // 
-            // loadCIDToolStripMenuItem
-            // 
-            this.loadCIDToolStripMenuItem.Name = "loadCIDToolStripMenuItem";
-            this.loadCIDToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.loadCIDToolStripMenuItem.Text = "Load CID";
-            this.loadCIDToolStripMenuItem.Click += new System.EventHandler(this.LoadCIDToolStripMenuItem_Click);
+            this.loadPHashToolStripMenuItem.Name = "loadPHashToolStripMenuItem";
+            this.loadPHashToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadPHashToolStripMenuItem.Text = "Load PHash";
+            this.loadPHashToolStripMenuItem.Click += new System.EventHandler(this.loadPHashToolStripMenuItem_Click);
             // 
             // clearToolStripMenuItem
             // 
@@ -164,8 +153,8 @@ namespace pixel
             // 
             this.filterSameCIDToolStripMenuItem.CheckOnClick = true;
             this.filterSameCIDToolStripMenuItem.Name = "filterSameCIDToolStripMenuItem";
-            this.filterSameCIDToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
-            this.filterSameCIDToolStripMenuItem.Text = "Filter same CID";
+            this.filterSameCIDToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.filterSameCIDToolStripMenuItem.Text = "Filter same PHash";
             this.filterSameCIDToolStripMenuItem.CheckedChanged += new System.EventHandler(this.FilterSameCIDToolStripMenuItem_CheckedChanged);
             // 
             // helpToolStripMenuItem
@@ -351,13 +340,6 @@ namespace pixel
             this.filenamesToClipboardToolStripMenuItem.Text = "Filenames to Clipboard";
             this.filenamesToClipboardToolStripMenuItem.Click += new System.EventHandler(this.filenamesToClipboardToolStripMenuItem_Click);
             // 
-            // loadPHashToolStripMenuItem
-            // 
-            this.loadPHashToolStripMenuItem.Name = "loadPHashToolStripMenuItem";
-            this.loadPHashToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.loadPHashToolStripMenuItem.Text = "Load PHash";
-            this.loadPHashToolStripMenuItem.Click += new System.EventHandler(this.loadPHashToolStripMenuItem_Click);
-            // 
             // Form1
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
@@ -397,8 +379,6 @@ namespace pixel
         private PictureBox pictureBox2;
         private MenuStrip menuStrip1;
         private ToolStripMenuItem fileToolStripMenuItem;
-        private ToolStripMenuItem createCIDToolStripMenuItem;
-        private ToolStripMenuItem loadCIDToolStripMenuItem;
         private ToolStripMenuItem clearToolStripMenuItem;
         private ToolStripMenuItem exitToolStripMenuItem;
         private ToolStripMenuItem helpToolStripMenuItem;
