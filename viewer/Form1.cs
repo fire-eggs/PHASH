@@ -1339,32 +1339,26 @@ namespace pixel
             }
         }
 
+        private void doShowFile(bool left)
+        {
+            var res = listBox1.SelectedItem as Pair;
+            if (res == null)
+                return;
+            if (_diffDlg == null)
+                _diffDlg = new ShowDiff { Owner = this };
+            _diffDlg.Stretch = false;
+            _diffDlg.Single = left ? res.FileLeft.Name : res.FileRight.Name; // TODO allow double/swap but not diff
+            _diffDlg.ShowDialog();
+        }
+
         private void pictureBox1_DoubleClick(object sender, EventArgs e)
         {
+            doShowFile(left:true);
         }
 
         private void pictureBox2_DoubleClick(object sender, EventArgs e)
         {
-            var res = listBox1.SelectedItem as Pair;
-            if (res == null)
-                return;
-            if (_diffDlg == null)
-                _diffDlg = new ShowDiff() { Owner = this };
-            _diffDlg.Stretch = false;
-            _diffDlg.Single = res.FileRight.Name;
-            _diffDlg.ShowDialog();
-        }
-
-        private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            var res = listBox1.SelectedItem as Pair;
-            if (res == null)
-                return;
-            if (_diffDlg == null)
-                _diffDlg = new ShowDiff() {Owner = this};
-            _diffDlg.Stretch = false;
-            _diffDlg.Single = res.FileLeft.Name;
-            _diffDlg.ShowDialog();
+            doShowFile(left:false);
         }
 
         private void listBox1_MouseUp(object sender, MouseEventArgs e)
