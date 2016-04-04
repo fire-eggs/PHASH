@@ -622,7 +622,15 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 
 	if (FillCImgFromBitmap(src, gdiBmp) < 0) return -1;
 
-	int res = _ph_dct_doimagehash(&src, hash);
+	int res;
+	try
+	{
+		res = _ph_dct_doimagehash(&src, hash);
+	}
+	catch (CImgInstanceException)
+	{
+		res = -1;
+	}
 
 	//BitmapData bitmapData;
 	//gdiBmp->LockBits(&Rect(0, 0, bmpW, bmpH), ImageLockModeRead, PixelFormat32bppARGB, &bitmapData);
