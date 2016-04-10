@@ -385,6 +385,7 @@ namespace pixel
             public double[] FVals { get; set; }
             public int Source { get; set; } // CID source for filtering
             public ulong PHash { get; set; } // PHash value
+            public uint CRC { get; set; } // CRC value
         };
 
         public class Pair
@@ -404,10 +405,15 @@ namespace pixel
             public int Val { get; set; }
             public double FVal { get; set; }
 
+            public bool CRCMatch { get; set; }
+
             public override string ToString()
             {
-                int i = (int)Math.Round(FVal*100);
-//                if (Equals(op, "F"))
+                if (Val==0 && CRCMatch)
+                    return ("DUP") + " : " + FileLeft.Name + " | " + FileRight.Name;
+                //int i = (int)Math.Round(FVal * 100);
+                int i = Val;
+                //                if (Equals(op, "F"))
                 return i.ToString("000") + " : " + FileLeft.Name + " | " + FileRight.Name;
                 //                return Val.ToString("D3") + op + FileLeft.Name + "|" + FileRight.Name;
             }
@@ -420,7 +426,13 @@ namespace pixel
 
                 int val = x.Val - y.Val;
                 if (val == 0) // same value, sort by name
+                {
+                    if (x.CRCMatch)
+                        return 1;
+                    if (y.CRCMatch)
+                        return -1;
                     val = String.Compare(x.FileLeft.Name, y.FileLeft.Name, StringComparison.Ordinal);
+                }
                 return val;
             }
             public static int FComparer(Pair x, Pair y)
@@ -430,7 +442,7 @@ namespace pixel
 
                 if (x.FVal < y.FVal)
                     return -1;
-                return 1;
+                return String.Compare(x.FileLeft.Name, y.FileLeft.Name, StringComparison.Ordinal);
 //                double val = x.FVal - y.FVal;
 //                if (val < 0.000001) // same value, sort by name
 //                    return String.Compare(x.FileLeft.Name, y.FileLeft.Name, StringComparison.Ordinal);
@@ -1371,7 +1383,7 @@ namespace pixel
 
             var ofd = new OpenFileDialog();
             ofd.Multiselect = false;
-            ofd.Filter = "PHASH files (*.phash)|*.phash";
+            ofd.Filter = "PHASH files (*.phash)|*.phash|PHASHC files (*.phashc)|*.phashc";
             ofd.FilterIndex = 1;
             ofd.DefaultExt = "PHASH";
             ofd.CheckFileExists = true;
@@ -1399,6 +1411,7 @@ namespace pixel
         private void ParsePHash(string filename)
         {
             // new variant. lines are of the form <hash>|<filepath>
+            // PHASHC variant: lines of the form <hash>|<crc>|<filepath>
 
             char[] splitChars = { '|' };
             _viewList = new List<Pair>();
@@ -1425,12 +1438,30 @@ namespace pixel
                             }
 
                             var parts2 = line.Split(splitChars);
+                            int namedex;
+                            int crcdex;
+                            if (parts2.Length == 2)
+                            {
+                                // .phash
+                                namedex = 1;
+                                crcdex = -1;
+                            }
+                            else
+                            {
+                                // .phashc
+                                namedex = 2;
+                                crcdex = 1;
+                            }
                             FileData fd = new FileData
                             {
-                                Name = parts2[1],
+                                Name = parts2[namedex],
                                 PHash = ulong.Parse(parts2[0]),
-                                Source = _cidCount
+                                Source = _cidCount,
+                                CRC = 0
                             };
+                            if (crcdex != -1)
+                                fd.CRC = uint.Parse(parts2[crcdex]);
+
                             if (fd.Name == null)
                                 continue;
 
@@ -1472,7 +1503,10 @@ namespace pixel
                 int val = phash_ham_dist(myDat.PHash, aDat.PHash);
                 if (val < PHASH_THRESHOLD)
                 {
-                    Pair p = new Pair {FVal = val/200.0, op = "?", FileLeftDex = me, FileRightDex = j}; //FileLeft = myDat, FileRight = aDat, };
+                    // was FVal = val / 200.0
+                    // NOTE: ham dist is always multiple of two ...
+                    Pair p = new Pair {Val = val / 2, op = "?", FileLeftDex = me, FileRightDex = j}; //FileLeft = myDat, FileRight = aDat, };
+                    p.CRCMatch = myDat.CRC == aDat.CRC && myDat.CRC != 0 && aDat.CRC != 0; // hoping a legit file CRC isn't zero...
                     _pairList.Add(p);
                 }
             }
