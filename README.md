@@ -24,3 +24,6 @@ Timed on my physical machine, processing a directory tree containing 940 images 
 Non-OpenMP: 105.66 seconds
     OpenMP:  28.36 seconds
 Your mileage may vary, depending on the number of processors you have ...
+
+20160410:
+Added a CRC calculation (based on the image pixels). Allows the viewer program to indicate that a file is an actual duplicate.
