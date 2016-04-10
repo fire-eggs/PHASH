@@ -626,6 +626,9 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 		return -1;
 	}
 
+	uint8_t *bits = src.data();
+	crcVal = 0;
+	crcVal = _crc32(crcVal, bits, src.width() * src.height());
 	int res;
 	try
 	{
@@ -636,44 +639,7 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 		res = -1;
 	}
 
-	//BitmapData bitmapData;
-	//gdiBmp->LockBits(&Rect(0, 0, bmpW, bmpH), ImageLockModeRead, PixelFormat32bppARGB, &bitmapData);
 
-	//int spectrum = -1;
-	//switch (bitmapData.PixelFormat)
-	//{
-	//case PixelFormat8bppIndexed:
-	//	spectrum = 1;
-	//	break;
-	//case PixelFormat24bppRGB:
-	//	spectrum = 3;
-	//	break;
-	//case PixelFormat32bppARGB:
-	//	spectrum = 4;
-	//	break;
-	//}
-
-	//UINT32 *pRaw = (UINT32*)bitmapData.Scan0;
-	//UINT32 *scan = pRaw;
-
-
-
-
-	//int colorIndex = 0;
-	//for (int y = 0; y < bmpH; y++)
-	//{
-	//	for (int x = 0; x < bmpW; x++)
-	//	{
-	//		UINT32 color = *(scan + x);
-	//		//rchan[colorIndex] = (unsigned char)(color & 0xff);
-	//		//gchan[colorIndex] = (unsigned char)((color & 0xff00) >> 8);
-	//		//bchan[colorIndex] = (unsigned char)((color & 0xff0000) >> 16);
-	//		colorIndex++;
-	//	}
-	//	scan += bitmapData.Stride / 4;
-	//}
-
-//	gdiBmp->UnlockBits(&bitmapData);
 	delete gdiBmp;
 	return res;
 }

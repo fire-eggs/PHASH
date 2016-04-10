@@ -93,12 +93,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="crc32.cpp" />
     <ClCompile Include="dirent.c" />
     <ClCompile Include="pHash.cpp" />
     <ClCompile Include="phcomplex.c" />
     <ClCompile Include="ph_fft.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CImg.h" />
     <ClInclude Include="dirent.h" />
     <ClInclude Include="pHash.h" />
     <ClInclude Include="ph_fft.h" />
