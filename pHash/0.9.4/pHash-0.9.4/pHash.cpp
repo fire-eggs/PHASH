@@ -620,7 +620,11 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 
 	CImg<uint8_t> src(bmpW, bmpH, 1, 3); // TODO should be 4 for spectrum?
 
-	if (FillCImgFromBitmap(src, gdiBmp) < 0) return -1;
+	if (FillCImgFromBitmap(src, gdiBmp) < 0)
+	{
+		delete gdiBmp;
+		return -1;
+	}
 
 	int res;
 	try
