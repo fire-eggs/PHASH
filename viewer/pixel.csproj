@@ -114,6 +114,12 @@
     <Compile Include="Image.cs" />
     <Compile Include="ImageProcessor.cs" />
     <Compile Include="Pixelate.cs" />
+    <Compile Include="RenameDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RenameDlg.Designer.cs">
+      <DependentUpon>RenameDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Settings1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -128,6 +134,9 @@
     <Content Include="App.ico" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RenameDlg.resx">
+      <DependentUpon>RenameDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ShowDiff.resx">
       <DependentUpon>ShowDiff.cs</DependentUpon>
@@ -160,6 +169,6 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent />
-    <PostBuildEvent />
+    <PostBuildEvent>copy $(TargetPath) $(ProjectDir)..\Executable</PostBuildEvent>
   </PropertyGroup>
 </Project>

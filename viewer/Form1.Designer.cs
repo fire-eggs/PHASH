@@ -51,6 +51,10 @@ namespace pixel
             this.btnMoveLeft = new System.Windows.Forms.Button();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.filenamesToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pixContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.moveToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.renameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.menuStrip1.SuspendLayout();
@@ -63,13 +67,16 @@ namespace pixel
             this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
+            this.pixContextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // listBox1
             // 
             this.listBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.listBox1.FormattingEnabled = true;
             this.listBox1.IntegralHeight = false;
+            this.listBox1.ItemHeight = 20;
             this.listBox1.Location = new System.Drawing.Point(0, 0);
             this.listBox1.Margin = new System.Windows.Forms.Padding(0);
             this.listBox1.Name = "listBox1";
@@ -87,6 +94,7 @@ namespace pixel
             this.pictureBox1.TabIndex = 4;
             this.pictureBox1.TabStop = false;
             this.pictureBox1.DoubleClick += new System.EventHandler(this.pictureBox1_DoubleClick);
+            this.pictureBox1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseUp);
             // 
             // pictureBox2
             // 
@@ -97,6 +105,7 @@ namespace pixel
             this.pictureBox2.TabIndex = 5;
             this.pictureBox2.TabStop = false;
             this.pictureBox2.DoubleClick += new System.EventHandler(this.pictureBox2_DoubleClick);
+            this.pictureBox2.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBox2_MouseUp);
             // 
             // menuStrip1
             // 
@@ -123,28 +132,29 @@ namespace pixel
             // loadPHashToolStripMenuItem
             // 
             this.loadPHashToolStripMenuItem.Name = "loadPHashToolStripMenuItem";
-            this.loadPHashToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadPHashToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
             this.loadPHashToolStripMenuItem.Text = "Load PHash";
             this.loadPHashToolStripMenuItem.Click += new System.EventHandler(this.loadPHashToolStripMenuItem_Click);
             // 
             // clearToolStripMenuItem
             // 
             this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
-            this.clearToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
             this.clearToolStripMenuItem.Text = "Clear";
             this.clearToolStripMenuItem.Click += new System.EventHandler(this.ClearToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.filterSameCIDToolStripMenuItem});
+            this.filterSameCIDToolStripMenuItem,
+            this.logFileToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -340,6 +350,35 @@ namespace pixel
             this.filenamesToClipboardToolStripMenuItem.Text = "Filenames to Clipboard";
             this.filenamesToClipboardToolStripMenuItem.Click += new System.EventHandler(this.filenamesToClipboardToolStripMenuItem_Click);
             // 
+            // pixContextMenuStrip
+            // 
+            this.pixContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.moveToToolStripMenuItem,
+            this.renameToolStripMenuItem});
+            this.pixContextMenuStrip.Name = "pixContextMenuStrip";
+            this.pixContextMenuStrip.Size = new System.Drawing.Size(134, 48);
+            // 
+            // moveToToolStripMenuItem
+            // 
+            this.moveToToolStripMenuItem.Name = "moveToToolStripMenuItem";
+            this.moveToToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.moveToToolStripMenuItem.Text = "Move To ...";
+            this.moveToToolStripMenuItem.Click += new System.EventHandler(this.moveToToolStripMenuItem_Click);
+            // 
+            // renameToolStripMenuItem
+            // 
+            this.renameToolStripMenuItem.Name = "renameToolStripMenuItem";
+            this.renameToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.renameToolStripMenuItem.Text = "Rename ...";
+            this.renameToolStripMenuItem.Click += new System.EventHandler(this.renameToolStripMenuItem_Click);
+            // 
+            // logFileToolStripMenuItem
+            // 
+            this.logFileToolStripMenuItem.Name = "logFileToolStripMenuItem";
+            this.logFileToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.logFileToolStripMenuItem.Text = "Log File...";
+            this.logFileToolStripMenuItem.Click += new System.EventHandler(this.logFileToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
@@ -366,6 +405,7 @@ namespace pixel
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel2.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
+            this.pixContextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -399,6 +439,10 @@ namespace pixel
         private Button btnMoveLeft;
         private Button btnStretchDiff;
         private ToolStripMenuItem loadPHashToolStripMenuItem;
+        private ContextMenuStrip pixContextMenuStrip;
+        private ToolStripMenuItem moveToToolStripMenuItem;
+        private ToolStripMenuItem renameToolStripMenuItem;
+        private ToolStripMenuItem logFileToolStripMenuItem;
 // ReSharper enable InconsistentNaming
         #endregion
 	}

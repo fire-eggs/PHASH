@@ -83,7 +83,7 @@
             this.button1.TabIndex = 0;
             this.button1.Text = "Swap";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.Button1_Click);
+            this.button1.Click += new System.EventHandler(this.btnSwap_Click);
             // 
             // btnClose
             // 
@@ -99,9 +99,9 @@
             // 
             this.btnActualSize.Location = new System.Drawing.Point(165, 3);
             this.btnActualSize.Name = "btnActualSize";
-            this.btnActualSize.Size = new System.Drawing.Size(75, 23);
+            this.btnActualSize.Size = new System.Drawing.Size(91, 23);
             this.btnActualSize.TabIndex = 2;
-            this.btnActualSize.Text = "Actual Size";
+            this.btnActualSize.Text = "Actual size";
             this.btnActualSize.UseVisualStyleBackColor = true;
             this.btnActualSize.Click += new System.EventHandler(this.btnActualSize_Click);
             // 

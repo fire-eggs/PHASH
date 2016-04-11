@@ -77,7 +77,7 @@ namespace pixel
             }
         }
 
-        private void Button1_Click(object sender, EventArgs e)
+        private void btnSwap_Click(object sender, EventArgs e)
         {
             _swap = !_swap;
             doImage();
@@ -100,12 +100,18 @@ namespace pixel
 
         private void btnActualSize_Click(object sender, EventArgs e)
         {
-            // TODO change button text
             // TODO auto-set to center if image smaller than window size
+            // TODO auto-set to 'actual size' if image smaller than window size
             if (pictureBox1.SizeMode == PictureBoxSizeMode.Zoom)
+            {
                 pictureBox1.SizeMode = PictureBoxSizeMode.CenterImage;
+                btnActualSize.Text = "Fit to window";
+            }
             else
+            {
                 pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+                btnActualSize.Text = "Actual size";
+            }
         }
 
         private void pictureBox1_DoubleClick(object sender, EventArgs e)
