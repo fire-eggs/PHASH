@@ -9,13 +9,16 @@ Calculate the phash value for all images in a folder and sub-folders. The image 
 Phase 2:
 Load a file from phase 1 into a viewer. It compares all image phash values and shows a list of image pairs, ordered by phash simularity. Rows in the list are selected to view the two images side-by-side.
 
-20151128:
-Uploaded the code for phase 1. The initial check-in uses CImg to load files; due to various issues it is limited to JPG files only.
+20160411:
+Provide some accumulated changes for the viewer:
+1. Context menu on each image, providing access to a rename dialog.
+2. Missing images are removed from the list: a) is marked as dup; b) is not found; c) is renamed/moved. Note that removed images are not "remembered" (i.e. the PHASH file is not updated).
+3. "Show image" dialog button label actually reflects current view.
+4. Diff / Stretch-diff buttons enabled appropriately.
+5. Fix a failure to release memory.
 
-Today's update is to replace using CImg to load the files with GDI+. As a result, GIF, PNG, TIFF and BMP files are now supported. Preliminary testing suggests GDI+ is about 25% faster than CImg/libjpeg.
-
-20151129:
-Uploaded the code for the viewer. This version is WinForms/C#. The code has a bit of historic cruft to be removed...
+20160410:
+Added a CRC calculation (based on the image pixels). Allows the viewer program to indicate that a file is an actual duplicate.
 
 20151201:
 Upgraded the Phase 1 code/project to use OpenMP for parallelism. Each file will be processed in its own thread.
@@ -25,5 +28,13 @@ Non-OpenMP: 105.66 seconds
     OpenMP:  28.36 seconds
 Your mileage may vary, depending on the number of processors you have ...
 
-20160410:
-Added a CRC calculation (based on the image pixels). Allows the viewer program to indicate that a file is an actual duplicate.
+20151129:
+Uploaded the code for the viewer. This version is WinForms/C#. The code has a bit of historic cruft to be removed...
+
+20151128:
+Uploaded the code for phase 1. The initial check-in uses CImg to load files; due to various issues it is limited to JPG files only.
+
+Today's update is to replace using CImg to load the files with GDI+. As a result, GIF, PNG, TIFF and BMP files are now supported. Preliminary testing suggests GDI+ is about 25% faster than CImg/libjpeg.
+
+
+
