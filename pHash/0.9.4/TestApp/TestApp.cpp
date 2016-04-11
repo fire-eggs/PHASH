@@ -19,17 +19,17 @@ extern "C" {
 		extern void ph_shutdown();
 }
 
-unsigned long long do_hash(char *filename)
-{
-	unsigned long long hash;
-	if (ph_dct_imagehash(filename, hash) < 0)
-	{
-		printf("***Fail %s\n", filename);
-		return -1;
-	}
+//unsigned long long do_hash(char *filename)
+//{
+//	unsigned long long hash;
+//	if (ph_dct_imagehash(filename, hash) < 0)
+//	{
+//		printf("***Fail %s\n", filename);
+//		return -1;
+//	}
 
-	return hash;
-}
+//	return hash;
+//}
 
 unsigned long long do_hash2(char *filename, unsigned long &crc)
 {

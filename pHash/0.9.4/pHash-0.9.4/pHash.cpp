@@ -606,7 +606,9 @@ int _ph_dct_doimagehash(CImg<uint8_t> *src, ulong64 &hash)
 	return 0;
 }
 
-int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &hash)
+uint32_t _crc32(uint32_t crc, const uint8_t *buf, size_t size);
+
+int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &hash, uint32_t &crcVal)
 {
 	if (!filename)	return -1;
 
@@ -629,6 +631,7 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 	uint8_t *bits = src.data();
 	crcVal = 0;
 	crcVal = _crc32(crcVal, bits, src.width() * src.height());
+
 	int res;
 	try
 	{
@@ -638,7 +641,6 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 	{
 		res = -1;
 	}
-
 
 	delete gdiBmp;
 	return res;

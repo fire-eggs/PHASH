@@ -91,6 +91,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath) $(SolutionDir)..\..\..\Executable</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="crc32.cpp" />
@@ -102,7 +109,6 @@
   <ItemGroup>
     <ClInclude Include="CImg.h" />
     <ClInclude Include="dirent.h" />
-    <ClInclude Include="pHash.h" />
     <ClInclude Include="ph_fft.h" />
     <ClInclude Include="png.h" />
   </ItemGroup>
