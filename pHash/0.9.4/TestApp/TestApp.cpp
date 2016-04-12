@@ -162,7 +162,18 @@ void shutdown() { ph_shutdown(); }
 bool exists(const std::string& name) 
 {
 	struct stat buffer;
-	return (stat(name.c_str(), &buffer) == 0);
+	if (stat(name.c_str(), &buffer) != 0)
+	{
+		// stat() on Windows can't handle trailing slashes
+		printf("ERROR: path <%s> doesn't exist! [did you accidentally include a trailing slash?]\n", name);
+		return false;
+	}
+	if ( buffer.st_mode & S_IFREG || !(buffer.st_mode & S_IFDIR))
+	{
+		printf("ERROR: path <%s> is not a folder!\n", name);
+		return false;
+	}
+	return true;
 }
 
 void doit(char *filename)
@@ -196,10 +207,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (!exists(argv[1]))
-	{
-		printf("ERROR: path <%s> doesn't exist!\n", argv[1]);
 		return 1;
-	}
 
 	doit(argv[1]);
 
