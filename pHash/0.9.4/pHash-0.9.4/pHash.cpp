@@ -22,15 +22,16 @@ D Grant Starkweather - dstarkweather@phash.org
 
 */
 
-#include "pHash.h"
 #ifndef _WIN32
 #include "config.h"
 #else
 #define snprintf _snprintf
+#include <windows.h>
 #include <gdiplus.h>
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib") // linker resolution
 #endif
+#include "pHash.h"
 #ifdef HAVE_VIDEO_HASH
 #include "cimgffmpeg.h"
 #endif
