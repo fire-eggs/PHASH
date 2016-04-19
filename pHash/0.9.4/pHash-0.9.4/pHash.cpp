@@ -75,7 +75,7 @@ const char* ph_about(){
     if(phash_version[0] != 0)
         return phash_version;
 
-    snprintf(phash_version, sizeof(phash_version), phash_project, "pHash 0.9.4");
+    _snprintf_s(phash_version, sizeof(phash_version), phash_project, "pHash 0.9.4");
     return phash_version;
 }
 #ifdef HAVE_IMAGE_HASH
@@ -1259,10 +1259,10 @@ char** ph_readfilenames(const char *dirname,int &count){
     rewinddir(dir);
     while ((dir_entry = readdir(dir)) != 0){
         if (strcmp(dir_entry->d_name,".") && strcmp(dir_entry->d_name,"..")){
-            strcat(path, dirname);
-            strcat(path, "/");
-            strcat(path, dir_entry->d_name);
-            files[index++] = strdup(path);
+            strcat_s(path, dirname);
+            strcat_s(path, "/");
+            strcat_s(path, dir_entry->d_name);
+            files[index++] = _strdup(path);
         }
         path[0]='\0';
     }
@@ -1313,7 +1313,7 @@ TxtHashPoint* ph_texthash(const char *filename,int *nbpoints){
         return NULL;
     }
     struct stat fileinfo;
-    fstat(fileno(pfile),&fileinfo);
+    fstat(_fileno(pfile),&fileinfo);
     count = fileinfo.st_size - WindowLength + 1;
     count = (int)(0.01*count);
     int d;
