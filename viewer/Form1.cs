@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
@@ -201,7 +200,7 @@ namespace pixel
             public uint CRC { get; set; } // CRC value
         };
 
-        public class Pair
+        public class Pair : IComparable<Pair>
         {
             public FileData FileLeft { get { return _data.Get(FileLeftDex); } }
             public FileData FileRight { get{ return _data.Get(FileRightDex); } }
@@ -216,6 +215,28 @@ namespace pixel
 
             public bool CRCMatch { get; set; }
 
+            /// Sort Pairs so that:
+            /// 1. 'DUP' entries are first
+            /// 2. Lower 'Val' entries are earlier (zero diff should be earliest)
+            /// 3. Same diff level, sort by left filename
+            public int CompareTo(Pair other)
+            {
+                int delta = Val - other.Val;
+                if (delta == 0) 
+                {
+                    if (CRCMatch != other.CRCMatch)
+                    {
+                        if (CRCMatch)
+                            return -1;
+                        if (other.CRCMatch)
+                            return +1;
+                    }
+                    return String.CompareOrdinal(FileLeft.Name, other.FileLeft.Name);
+                }
+
+                return delta;
+            }
+
             public override string ToString()
             {
                 if (Val==0 && CRCMatch)
@@ -226,154 +247,7 @@ namespace pixel
                 return i.ToString("000") + " : " + FileLeft.Name + " | " + FileRight.Name;
                 //                return Val.ToString("D3") + op + FileLeft.Name + "|" + FileRight.Name;
             }
-
-            // Sorting comparison.
-            public static int Comparer(Pair x, Pair y)
-            {
-                if (x == null || y == null) // I'm not putting any null entries in the list but they're arriving here???
-                    return 0;
-
-                int val = x.Val - y.Val;
-                if (val == 0) // same value, sort by name
-                {
-                    if (x.CRCMatch)
-                        return 1;
-                    if (y.CRCMatch)
-                        return -1;
-                    val = String.Compare(x.FileLeft.Name, y.FileLeft.Name, StringComparison.Ordinal);
-                }
-                return val;
-            }
-            public static int FComparer(Pair x, Pair y)
-            {
-                if (x == null || y == null) // I'm not putting any null entries in the list but they're arriving here???
-                    return 0;
-
-                if (x.FVal < y.FVal)
-                    return -1;
-                return String.Compare(x.FileLeft.Name, y.FileLeft.Name, StringComparison.Ordinal);
-//                double val = x.FVal - y.FVal;
-//                if (val < 0.000001) // same value, sort by name
-//                    return String.Compare(x.FileLeft.Name, y.FileLeft.Name, StringComparison.Ordinal);
-//                return val < 0 ? -1 : 1;
-            }
         };
-#if false
-        int compareFH(int[] vals1, int[] vals2)
-        {
-            // compare assuming that i2 is a flipped-horizontal version of i1
-            int val = 0;
-            for (int y = 0; y < 10; y++ )
-            {
-                for (int x= 0; x < 10; x++)
-                {
-                    int dex1 = y*10 + x;
-                    int dex2 = y*10 + (9 - x);
-//                    val += Math.Abs(vals1[dex1] - vals2[dex2]);
-                    int val0 = vals1[dex1] - vals2[dex2];
-                    val += val0 > 0 ? val0 : -val0;
-                    if (val > THRESHOLD)
-                        return int.MaxValue;
-                }
-            }
-            return val;
-        }
-
-        int compareFV(int[] vals1, int[] vals2)
-        {
-            // compare assuming that i2 is a flipped-vertical version of i1
-            int val = 0;
-            for (int y = 0; y < 10; y++)
-            {
-                for (int x = 0; x < 10; x++)
-                {
-                    int dex1 = y * 10 + x;
-                    int dex2 = (9-y) * 10 + x;
-//                    val += Math.Abs(vals1[dex1] - vals2[dex2]);
-                    int val0 = vals1[dex1] - vals2[dex2];
-                    val += val0 > 0 ? val0 : -val0;
-                    if (val > THRESHOLD)
-                        return int.MaxValue;
-                }
-            }
-            return val;
-        }
-
-        int compareR90(int[] vals1, int[] vals2)
-        {
-            // compare assuming that i2 is a rotated 90-degrees version of i1
-            int val = 0;
-            for (int y = 0; y < 10; y++)
-            {
-                for (int x = 0; x < 10; x++)
-                {
-                    int dex1 = y * 10 + x;
-                    int dex2 = (9 - x) * 10 + y;
-//                    val += Math.Abs(vals1[dex1] - vals2[dex2]);
-                    int val0 = vals1[dex1] - vals2[dex2];
-                    val += val0 > 0 ? val0 : -val0;
-                    if (val > THRESHOLD)
-                        return int.MaxValue;
-                }
-            }
-            return val;
-        }
-
-        int compareR180(int[] vals1, int[] vals2)
-        {
-            int val = 0;
-            int dex1 = 0;
-            for (int y = 0; y < 10; y++)
-            {
-                for (int x = 0; x < 10; x++)
-                {
-                    int dex2 = (9 - x) * 10 + (9-y);
-//                    val += Math.Abs(vals1[dex1] - vals2[dex2]);
-                    int val0 = vals1[dex1] - vals2[dex2];
-                    val += val0 > 0 ? val0 : -val0;
-                    if (val > THRESHOLD)
-                        return int.MaxValue;
-                    dex1++;
-                }
-            }
-            return val;
-        }
-
-        int compareR270(int[] vals1, int[] vals2)
-        {
-            int val = 0;
-            int dex1 = 0;
-            for (int y = 0; y < 10; y++)
-            {
-                for (int x = 0; x < 10; x++)
-                {
-                    int dex2 = x * 10 + (9 - y);
-//                    val += Math.Abs(vals1[dex1] - vals2[dex2]);
-                    int val0 = vals1[dex1] - vals2[dex2];
-                    val += val0 > 0 ? val0 : -val0;
-
-                    if (val > THRESHOLD)
-                        return int.MaxValue;
-                    dex1++;
-                }
-            }
-            return val;
-        }
-#endif
-
-        private const int BLKCNTM1 = PIX_COUNT - 1;
-
-        double compareFAll(double[] vals1, double[] vals2, out string comp)
-        {
-            double total = 0.0;
-            int count = vals1.GetLength(0);
-            for (int i = 0; i < count; i++)
-            {
-                total += Math.Abs(vals1[i] - vals2[i]);
-            }
-            comp = "F";
-            return total/count;
-        }
 
         // Make a *single* pass over the values, finding the best match
         //int compareAll(int[] vals1, int[] vals2, out string comp)
@@ -597,7 +471,7 @@ namespace pixel
             //Thread.Sleep(250);
             try
             {
-                _pairList.Sort(Pair.Comparer);
+                _pairList.Sort();
                 FilterOutMatchingCID();
                 setListbox();
                 ShowStatus("Compare done");
@@ -612,6 +486,7 @@ namespace pixel
             }
         }
 
+        // TODO move to Image.cs ?
         // PictureBox locks the image, preventing rename
         // http://stackoverflow.com/questions/5961652/how-can-i-load-an-image-from-a-file-without-keeping-the-file-locked
         private System.Drawing.Image FromStream(string fileName)

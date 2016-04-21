@@ -2239,19 +2239,29 @@ namespace pixel
             if (!IsGraphic(fileName1) || !IsGraphic(fileName2))
                 return new Bitmap(1, 1);
 
-            Bitmap tempImage1 = new Bitmap(fileName1);
-            Bitmap tempImage2 = new Bitmap(fileName2);
+            Bitmap tempImage1 = null;
+            Bitmap tempImage2 = null;
+            try
+            {
+                tempImage1 = new Bitmap(fileName1);
+                tempImage2 = new Bitmap(fileName2);
 
-            if (GetPixelSize(tempImage1) == 1)
-                tempImage1 = new Bitmap(tempImage1); // upscale to 24-bit
-            if (GetPixelSize(tempImage2) == 1)
-                tempImage2 = new Bitmap(tempImage2); // upscale to 24-bit
+                if (GetPixelSize(tempImage1) == 1)
+                    tempImage1 = new Bitmap(tempImage1); // upscale to 24-bit
+                if (GetPixelSize(tempImage2) == 1)
+                    tempImage2 = new Bitmap(tempImage2); // upscale to 24-bit
 
-            Bitmap res = kbrDiff(tempImage1, tempImage2, stretch);
+                Bitmap res = kbrDiff(tempImage1, tempImage2, stretch);
+                return res;
+            }
+            finally
+            {
+                if (tempImage1 != null)
+                    tempImage1.Dispose();
+                if (tempImage2 != null)
+                    tempImage2.Dispose();
+            }
 
-            tempImage1.Dispose(); // TODO really need a try..finally
-            tempImage2.Dispose();
-            return res;
         }
 
         // Diff two images which are the same dimensions
