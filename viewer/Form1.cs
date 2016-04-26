@@ -31,8 +31,6 @@ namespace pixel
 
         private string _logPath;
 
-        // TODO means to view the log
-
         public void log(string msg)
         {
             try
@@ -640,6 +638,9 @@ namespace pixel
             Settings1.Default.MainLoc = Location;
             Settings1.Default.SplitDist = splitContainer1.SplitterDistance;
             Settings1.Default.Save();
+
+            // TODO save/load showdiff size/location
+            // TODO handle multi monitor
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -741,16 +742,23 @@ namespace pixel
             return ok;
         }
 
+        // Helper to allocate the ShowDiff dialog once
+        public ShowDiff DiffDialog
+        {
+            get { return _diffDlg ?? (_diffDlg = new ShowDiff {Owner = this}); }
+        }
+
         private void doShowFile(bool left)
         {
             var res = listBox1.SelectedItem as Pair;
             if (res == null)
                 return;
-            if (_diffDlg == null)
-                _diffDlg = new ShowDiff { Owner = this };
-            _diffDlg.Stretch = false;
-            _diffDlg.Single = left ? res.FileLeft.Name : res.FileRight.Name; // TODO allow double/swap but not diff
-            _diffDlg.ShowDialog();
+            var dlg = DiffDialog;
+            dlg.Diff = false;
+            dlg.Stretch = false;
+            dlg.Pair = res;
+            dlg.StartWithLeft = left;
+            dlg.ShowDialog();
         }
 
         private void pictureBox1_DoubleClick(object sender, EventArgs e)
@@ -795,11 +803,11 @@ namespace pixel
             var res = listBox1.SelectedItem as Pair;
             if (res == null)
                 return;
-            if (_diffDlg == null)
-                _diffDlg = new ShowDiff() { Owner = this };
-            _diffDlg.Stretch = stretch; // TODO order dependency issue!
-            _diffDlg.Pair = res;
-            _diffDlg.ShowDialog();
+            var dlg = DiffDialog;
+            dlg.Diff = true;
+            dlg.Stretch = stretch;
+            dlg.Pair = res;
+            dlg.ShowDialog();
         }
 
         private void loadPHashToolStripMenuItem_Click(object sender, EventArgs e)

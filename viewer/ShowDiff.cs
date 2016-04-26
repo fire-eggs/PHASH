@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 
 // ReSharper disable SuggestUseVarKeywordEvident
+// ReSharper disable InconsistentNaming
 
 namespace pixel
 {
     public partial class ShowDiff : Form
     {
-        private Form1.Pair _pair;
         private bool _swap;
         private Size _mySize;
         private Point _myLoc;
-        private string _path;
 
         public ShowDiff()
         {
@@ -21,44 +19,61 @@ namespace pixel
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
         }
 
+        // Indicates if the dialog is to show the difference or not
+        public bool Diff { get; set; }
+
         public bool Stretch { get; set; }
 
-        public Form1.Pair Pair
+        public bool StartWithLeft { get; set; }
+
+        public Form1.Pair Pair { private get; set; }
+
+        private string InitText
         {
-            set
+            get { return StartWithLeft ? "Left Image" : "Right Image"; }
+        }
+        private string SwapText
+        {
+            get { return StartWithLeft ? "Right Image" : "Left Image"; }
+        }
+
+        private string PairPath
+        {
+            get
             {
-                _path = "";
-                _pair = value;
-                doImage();
+                if (StartWithLeft)
+                    return _swap ? Pair.FileRight.Name : Pair.FileLeft.Name;
+                return _swap ? Pair.FileLeft.Name : Pair.FileRight.Name;
             }
         }
 
-        public string Single
+        // cache the calculated bitmaps rather than rebuild each time the user toggles
+        private Bitmap bmpLvR;
+        private Bitmap bmpRvL;
+
+        private Bitmap LVR
         {
-            set { _path = value; doImage(); }
+            get { return bmpLvR ?? (bmpLvR = Image.kbrDiff(Pair.FileLeft.Name, Pair.FileRight.Name, Stretch)); }
+        }
+        private Bitmap RVL
+        {
+            get { return bmpRvL ?? (bmpRvL = Image.kbrDiff(Pair.FileRight.Name, Pair.FileLeft.Name, Stretch)); }
         }
 
         private void doImage()
         {
+
             try
             {
-                button1.Enabled = (_path == "");
-                if (_path != "")
-                {
-                    Text = "";
-                    pictureBox1.Image = FromStream(_path);
-                    return;
-                }
-
                 if (!_swap)
                 {
-                    Text = "Left vs Right";
-                    pictureBox1.Image = Image.kbrDiff(_pair.FileLeft.Name, _pair.FileRight.Name, Stretch);
+                    Text = Diff ? "Left vs Right" : InitText;
+                    pictureBox1.Image = Diff ? LVR : Image.OpenNoLock(PairPath);
                 }
                 else
                 {
-                    Text = "Right vs Left";
-                    pictureBox1.Image = Image.kbrDiff(_pair.FileRight.Name, _pair.FileLeft.Name, Stretch);
+                    Text = Diff ? "Right vs Left" : SwapText;
+                    pictureBox1.Image = Diff ? RVL : Image.OpenNoLock(PairPath);
                 }
             }
             catch (Exception)
@@ -77,10 +92,14 @@ namespace pixel
             pictureBox1.Image = null;
             _mySize = Size;
             _myLoc = Location;
+            bmpLvR = null;
+            bmpRvL = null;
+            Pair = null;
         }
 
         private void ShowDiff_Load(object sender, EventArgs e)
         {
+            doImage();
             if (_mySize.IsEmpty)
                 return;
             Size = _mySize;
