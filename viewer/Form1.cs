@@ -486,27 +486,13 @@ namespace pixel
             }
         }
 
-        // TODO move to Image.cs ?
-        // PictureBox locks the image, preventing rename
-        // http://stackoverflow.com/questions/5961652/how-can-i-load-an-image-from-a-file-without-keeping-the-file-locked
-        private System.Drawing.Image FromStream(string fileName)
-        {
-            using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            {
-                MemoryStream ms = new MemoryStream();
-                fs.CopyTo(ms);
-                ms.Seek(0, SeekOrigin.Begin);
-                return System.Drawing.Image.FromStream(ms);
-            }             
-        }
-
         private void LoadImage(PictureBox control, string filename)
         {
             control.SizeMode = PictureBoxSizeMode.Zoom;
             control.ImageLocation = filename;
             try
             {
-                control.Image = FromStream(filename);
+                control.Image = Image.OpenNoLock(filename);
             }
             catch (Exception)
             {

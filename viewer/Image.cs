@@ -2234,6 +2234,19 @@ namespace pixel
 
         #endregion
 
+        // PictureBox locks the image, preventing rename
+        // http://stackoverflow.com/questions/5961652/how-can-i-load-an-image-from-a-file-without-keeping-the-file-locked
+        public static System.Drawing.Image OpenNoLock(string fileName)
+        {
+            using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                MemoryStream ms = new MemoryStream();
+                fs.CopyTo(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                return System.Drawing.Image.FromStream(ms);
+            }
+        }
+
         public static Bitmap kbrDiff(string fileName1, string fileName2, bool stretch)
         {
             if (!IsGraphic(fileName1) || !IsGraphic(fileName2))

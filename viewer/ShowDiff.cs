@@ -38,17 +38,6 @@ namespace pixel
             set { _path = value; doImage(); }
         }
 
-        private System.Drawing.Image FromStream(string fileName)
-        {
-            using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            {
-                MemoryStream ms = new MemoryStream();
-                fs.CopyTo(ms);
-                ms.Seek(0, SeekOrigin.Begin);
-                return System.Drawing.Image.FromStream(ms);
-            }
-        }
-
         private void doImage()
         {
             try
