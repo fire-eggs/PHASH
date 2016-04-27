@@ -34,6 +34,7 @@ namespace pixel
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.filterSameCIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pixTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -54,7 +55,7 @@ namespace pixel
             this.pixContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.moveToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.logFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.recentFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.menuStrip1.SuspendLayout();
@@ -124,6 +125,7 @@ namespace pixel
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.loadPHashToolStripMenuItem,
             this.clearToolStripMenuItem,
+            this.recentFilesToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -132,21 +134,21 @@ namespace pixel
             // loadPHashToolStripMenuItem
             // 
             this.loadPHashToolStripMenuItem.Name = "loadPHashToolStripMenuItem";
-            this.loadPHashToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.loadPHashToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.loadPHashToolStripMenuItem.Text = "Load PHash";
             this.loadPHashToolStripMenuItem.Click += new System.EventHandler(this.loadPHashToolStripMenuItem_Click);
             // 
             // clearToolStripMenuItem
             // 
             this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
-            this.clearToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.clearToolStripMenuItem.Text = "Clear";
             this.clearToolStripMenuItem.Click += new System.EventHandler(this.ClearToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
@@ -166,6 +168,13 @@ namespace pixel
             this.filterSameCIDToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
             this.filterSameCIDToolStripMenuItem.Text = "Filter same PHash";
             this.filterSameCIDToolStripMenuItem.CheckedChanged += new System.EventHandler(this.FilterSameCIDToolStripMenuItem_CheckedChanged);
+            // 
+            // logFileToolStripMenuItem
+            // 
+            this.logFileToolStripMenuItem.Name = "logFileToolStripMenuItem";
+            this.logFileToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.logFileToolStripMenuItem.Text = "Log File...";
+            this.logFileToolStripMenuItem.Click += new System.EventHandler(this.logFileToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -361,23 +370,22 @@ namespace pixel
             // moveToToolStripMenuItem
             // 
             this.moveToToolStripMenuItem.Name = "moveToToolStripMenuItem";
-            this.moveToToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.moveToToolStripMenuItem.Size = new System.Drawing.Size(133, 22);
             this.moveToToolStripMenuItem.Text = "Move To ...";
             this.moveToToolStripMenuItem.Click += new System.EventHandler(this.moveToToolStripMenuItem_Click);
             // 
             // renameToolStripMenuItem
             // 
             this.renameToolStripMenuItem.Name = "renameToolStripMenuItem";
-            this.renameToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.renameToolStripMenuItem.Size = new System.Drawing.Size(133, 22);
             this.renameToolStripMenuItem.Text = "Rename ...";
             this.renameToolStripMenuItem.Click += new System.EventHandler(this.renameToolStripMenuItem_Click);
             // 
-            // logFileToolStripMenuItem
+            // recentFilesToolStripMenuItem
             // 
-            this.logFileToolStripMenuItem.Name = "logFileToolStripMenuItem";
-            this.logFileToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
-            this.logFileToolStripMenuItem.Text = "Log File...";
-            this.logFileToolStripMenuItem.Click += new System.EventHandler(this.logFileToolStripMenuItem_Click);
+            this.recentFilesToolStripMenuItem.Name = "recentFilesToolStripMenuItem";
+            this.recentFilesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.recentFilesToolStripMenuItem.Text = "Recent Files";
             // 
             // Form1
             // 
@@ -443,6 +451,7 @@ namespace pixel
         private ToolStripMenuItem moveToToolStripMenuItem;
         private ToolStripMenuItem renameToolStripMenuItem;
         private ToolStripMenuItem logFileToolStripMenuItem;
+        private ToolStripMenuItem recentFilesToolStripMenuItem;
 // ReSharper enable InconsistentNaming
         #endregion
 	}

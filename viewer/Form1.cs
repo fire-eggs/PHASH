@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using JWC;
 
 // BUG: flipping "filter same CID" doesn't clear listbox when only one phash loaded
 // TODO: on move or rename, update pic box ASAP ?
@@ -30,6 +32,8 @@ namespace pixel
         private const double FTHRESHOLD = 0.7;
 
         private string _logPath;
+
+        protected MruStripMenu mnuMRU;
 
         public void log(string msg)
         {
@@ -66,6 +70,22 @@ namespace pixel
 
             var folder = Path.GetDirectoryName(Application.ExecutablePath) ?? @"C:\";
             _logPath = Path.Combine(folder, "imgComp.log");
+
+            mnuMRU = new MruStripMenuInline(fileToolStripMenuItem, recentFilesToolStripMenuItem, OnMRU );
+        }
+
+        private void OnMRU(int number, string filename)
+        {
+            if (!File.Exists(filename))
+            {
+                mnuMRU.RemoveFile(number);
+                MessageBox.Show("The file no longer exists:" + filename);
+                return;
+            }
+
+            // TODO process could fail for some reason, in which case remove the file from the MRU list
+            mnuMRU.SetFirstFile(number);
+            ProcessPHash(filename);
         }
 
         void Form1_DragEnter(object sender, DragEventArgs e)
@@ -637,6 +657,10 @@ namespace pixel
             Settings1.Default.MainSize = Size;
             Settings1.Default.MainLoc = Location;
             Settings1.Default.SplitDist = splitContainer1.SplitterDistance;
+
+            Settings1.Default.MRUFiles = new StringCollection();
+            Settings1.Default.MRUFiles.AddRange(mnuMRU.GetFiles());
+
             Settings1.Default.Save();
 
             // TODO save/load showdiff size/location
@@ -649,6 +673,13 @@ namespace pixel
             Size = Settings1.Default.MainSize;
             Location = Settings1.Default.MainLoc;
             splitContainer1.SplitterDistance = Settings1.Default.SplitDist;
+
+            if (Settings1.Default.MRUFiles != null && Settings1.Default.MRUFiles.Count > 0)
+            {
+                string[] tmp = new string[Settings1.Default.MRUFiles.Count];
+                Settings1.Default.MRUFiles.CopyTo(tmp, 0);
+                mnuMRU.SetFiles(tmp);
+            }
         }
 
         private void FilterSameCIDToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -828,6 +859,7 @@ namespace pixel
             {
                 return;
             }
+            mnuMRU.AddFile(ofd.FileName);
             ProcessPHash(ofd.FileName);
         }
 

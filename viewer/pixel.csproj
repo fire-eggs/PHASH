@@ -113,6 +113,7 @@
     </Compile>
     <Compile Include="Image.cs" />
     <Compile Include="ImageProcessor.cs" />
+    <Compile Include="MruStripMenu.cs" />
     <Compile Include="Pixelate.cs" />
     <Compile Include="RenameDlg.cs">
       <SubType>Form</SubType>
