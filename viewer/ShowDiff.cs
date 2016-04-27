@@ -108,8 +108,6 @@ namespace pixel
 
         private void btnActualSize_Click(object sender, EventArgs e)
         {
-            // TODO auto-set to center if image smaller than window size
-            // TODO auto-set to 'actual size' if image smaller than window size
             if (pictureBox1.SizeMode == PictureBoxSizeMode.Zoom)
             {
                 pictureBox1.SizeMode = PictureBoxSizeMode.CenterImage;

@@ -15,6 +15,7 @@ using JWC;
 // TODO: on move or rename, update pic box ASAP ?
 
 // ReSharper disable SuggestUseVarKeywordEvident
+// ReSharper disable InconsistentNaming
 
 namespace pixel
 {
@@ -267,141 +268,6 @@ namespace pixel
             }
         };
 
-        // Make a *single* pass over the values, finding the best match
-        //int compareAll(int[] vals1, int[] vals2, out string comp)
-        //{
-        //    int valNorm = 0;
-        //    int valFH = 0;
-        //    int valFV = 0;
-        //    int valR9 = 0;
-        //    int valR1 = 0;
-        //    int valR2 = 0;
-
-        //    int dex1 = 0;
-        //    int diff_count = 0;
-        //    int zero_count = 0;
-        //    for (int y = 0; y < PIX_COUNT; y++)
-        //    {
-        //        for (int x = 0; x < PIX_COUNT; x++)
-        //        {
-        //            // "Normal": block vs block
-        //            int val0 = Math.Abs(vals1[dex1] - vals2[dex1]);
-        //            if (val0 > 25)
-        //                diff_count ++;
-        //            if (val0 == 0)
-        //                zero_count++;
-        //            valNorm += val0;
-
-        //            // "FH": flipped horizontal
-        //            int dexFH = y * PIX_COUNT + (BLKCNTM1 - x);
-        //            val0 = vals1[dex1] - vals2[dexFH];
-        //            valFH += val0 > 0 ? val0 : -val0;
-
-        //            // "FV": flipped vertically
-        //            int dexFV = (BLKCNTM1 - y) * PIX_COUNT + x;
-        //            val0 = vals1[dex1] - vals2[dexFV];
-        //            valFV += val0 > 0 ? val0 : -val0;
-
-        //            // "R9": rotated 90 degrees
-        //            int dexR9 = (BLKCNTM1 - x) * PIX_COUNT + y;
-        //            val0 = vals1[dex1] - vals2[dexR9];
-        //            valR9 += val0 > 0 ? val0 : -val0;
-
-        //            // "R1": rotated 180 degrees
-        //            int dexR1 = (BLKCNTM1 - x) * PIX_COUNT + (BLKCNTM1 - y);
-        //            val0 = vals1[dex1] - vals2[dexR1];
-        //            valR1 += val0 > 0 ? val0 : -val0;
-
-        //            // "R2": rotated 270 degrees
-        //            int dexR2 = x * PIX_COUNT + (BLKCNTM1 - y);
-        //            val0 = vals1[dex1] - vals2[dexR2];
-        //            valR2 += val0 > 0 ? val0 : -val0;
-
-        //            dex1++;
-        //        }
-        //    }
-
-        //    // find the best value
-        //    int res = int.MaxValue;
-        //    comp = "::";
-        //    if (valNorm <= THRESHOLD && valNorm < res)
-        //    {
-        //        res = valNorm;
-        //        comp = ":NO:";
-
-        //        // NOTE test: if "same" except for a small # of major diffs, WITHOUT rotation/flipping
-        //        if (zero_count > 50 && diff_count < 10)
-        //            res = res / 10;
-        //    }
-
-        //    if (true)
-        //        return res; // NOTE temp hack
-
-        //    if (valFH <= THRESHOLD && valFH < res)
-        //    {
-        //        res = valFH;
-        //        comp = ":FH:";
-        //    }
-        //    if (valFV <= THRESHOLD && valFV < res)
-        //    {
-        //        res = valFV;
-        //        comp = ":FV:";
-        //    }
-        //    if (valR9 <= THRESHOLD && valR9 < res)
-        //    {
-        //        res = valR9;
-        //        comp = ":R9:";
-        //    }
-        //    if (valR1 <= THRESHOLD && valR1 < res)
-        //    {
-        //        res = valR1;
-        //        comp = ":R1:";
-        //    }
-        //    if (valR2 <= THRESHOLD && valR2 < res)
-        //    {
-        //        res = valR2;
-        //        comp = ":R2:";
-        //    }
-        //    return res;
-        //}
-#if false
-        int compare(int[] vals1, int[] vals2)
-        {
-            //int valSum1 = 0;
-            //int valSum2 = 0;
-            //for (int i=0; i < 100;i++)
-            //{
-            //    valSum1 += i1.Vals[i];
-            //    valSum2 += i2.Vals[i];
-            //}
-            //int delta = Math.Abs(valSum1 - valSum2);
-
-            // TODO one or more arrays have too many entries???
-            // TODO use a constant
-            int val = 0;
-            for (int i = 0; i < 100; i++)
-            {
-                int val0 = vals1[i] - vals2[i];
-                val += val0 > 0 ? val0 : -val0;
-//                int val2 = val0 > 0 ? val0 : -val0;
-//                int val2 = Math.Abs();
-//                if (val2 > 1)
-//                    val += val2;
-                if (val > THRESHOLD)
-                    return int.MaxValue;
-            }
-
-//            if (delta > THRESHOLD && val < THRESHOLD)
-//            {
-//                Console.WriteLine("{2},{3}:{0}|{1}", i1.Name, i2.Name, val, delta);
-
-//                //            Console.WriteLine("{2},{3}:{0}|{1}",i1.Name, i2.Name, val,delta);
-////                Console.WriteLine("{2},{3}", i1.Name, i2.Name, val, delta);                
-//            }
-            return val;
-        }
-#endif
-
         class FileSet
         {
             public FileSet()
@@ -446,29 +312,10 @@ namespace pixel
                 {
                     _viewList.Add(pair);
                     i++;
-                    if (i > 1000)
+                    if (i > 1000) // NOTE: 1000 pair limit. Consider 'on-demand' loading instead?
                         break; // exitloop
                 }
             }
-//            if (!_filterSameCid)
-//                _viewList = _pairList;
-//            else
-//            {
-//                // TODO need to do this on the GUI thread otherwise doesn't show
-//                //oldColor = statusStrip1.BackColor;
-//                //statusStrip1.BackColor = Color.Red;
-
-//                _viewList = new List<Pair>();
-//                if (_pairList != null)
-//                {
-//                    foreach (var pair in _pairList)
-//                    {
-//                        if (pair.FileLeft.Source != pair.FileRight.Source)
-//                            _viewList.Add(pair);
-//                    }
-//                }
-////                statusStrip1.BackColor = oldColor;
-//            }
         }
 
         private void setListbox()
@@ -485,8 +332,6 @@ namespace pixel
         {
             log(string.Format("compare done: {0}", _pairList.Count));
 
-            //ShowStatus("Compare done - sort"); // TODO need to allow the GUI thread to run to see this
-            //Thread.Sleep(250);
             try
             {
                 _pairList.Sort();
@@ -619,7 +464,7 @@ namespace pixel
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DoExit();
+            //DoExit();
             Close();
         }
 
