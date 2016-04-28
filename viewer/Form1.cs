@@ -26,11 +26,11 @@ namespace pixel
     {
         private ShowDiff _diffDlg; // to retain context data
 
-        private int _counter;
+        //private int _counter;
 
-        private const int PIX_COUNT = 10; // number of "pixels" across/down 
-        private const int THRESHOLD = 2000;
-        private const double FTHRESHOLD = 0.7;
+        //private const int PIX_COUNT = 10; // number of "pixels" across/down 
+        //private const int THRESHOLD = 2000;
+        //private const double FTHRESHOLD = 0.7;
 
         private string _logPath;
 
@@ -65,9 +65,9 @@ namespace pixel
             InitializeComponent();
             _data = new FileSet(); //List<FileData>();
 
-            AllowDrop = true;
-            DragDrop += Form1_DragDrop;
-            DragEnter += Form1_DragEnter;
+            AllowDrop = false;  // TODO restore drag-and-drop support?
+            //DragDrop += Form1_DragDrop;
+            //DragEnter += Form1_DragEnter;
 
             var folder = Path.GetDirectoryName(Application.ExecutablePath) ?? @"C:\";
             _logPath = Path.Combine(folder, "imgComp.log");
@@ -89,125 +89,70 @@ namespace pixel
             ProcessPHash(filename);
         }
 
-        void Form1_DragEnter(object sender, DragEventArgs e)
-        {
-            e.Effect = IsValidDrop(e) ? DragDropEffects.Copy : DragDropEffects.None;
-        }
+        //void Form1_DragEnter(object sender, DragEventArgs e)
+        //{
+        //    e.Effect = IsValidDrop(e) ? DragDropEffects.Copy : DragDropEffects.None;
+        //}
 
-        private void ProcessPath(string path)
-        {
-            ImageProcessor ip = new ImageProcessor(StatusColor, ShowStatus, TaskScheduler.FromCurrentSynchronizationContext(), log);
-            ip.ProcessPath(path);
-        }
+        //private void ProcessPath(string path)
+        //{
+        //    ImageProcessor ip = new ImageProcessor(StatusColor, ShowStatus, TaskScheduler.FromCurrentSynchronizationContext(), log);
+        //    ip.ProcessPath(path);
+        //}
 
-        private void StatusColor(Color? val)
-        {
-            if (val != null)
-            {
-                _oldColor = statusStrip1.BackColor;
-                statusStrip1.BackColor = (Color)val;
-            }
-            else
-            {
-                statusStrip1.BackColor = _oldColor;
-            }
-        }
+        //private void StatusColor(Color? val)
+        //{
+        //    if (val != null)
+        //    {
+        //        _oldColor = statusStrip1.BackColor;
+        //        statusStrip1.BackColor = (Color)val;
+        //    }
+        //    else
+        //    {
+        //        statusStrip1.BackColor = _oldColor;
+        //    }
+        //}
 
-        private void Form1_DragDrop(object sender, DragEventArgs e)
-        {
-            MessageBox.Show("drag-and-drop currently unsupported");
-            //string path = DropPath(e);
-            //if (path != null)
-            //{
-            //    ProcessPath(path);//threadProcessPath(path);
-            //}
-            //else
-            //{
-            //    path = DropCID(e);
-            //    if (path == null)
-            //    {
-            //        path = DropFCID(e);
-            //        if (path == null)
-            //            return;
-            //        ProcessFCID(path);
-            //    }
-            //    else
-            //        ProcessCID(path);                // load CID
-            //}
-        }
+        //private void Form1_DragDrop(object sender, DragEventArgs e)
+        //{
+        //    string path = DropPath(e);
+        //    if (path != null)
+        //    {
+        //        ProcessPath(path);//threadProcessPath(path);
+        //    }
+        //    else
+        //    {
+        //        path = DropCID(e);
+        //        if (path == null)
+        //        {
+        //            path = DropFCID(e);
+        //            if (path == null)
+        //                return;
+        //            ProcessFCID(path);
+        //        }
+        //        else
+        //            ProcessCID(path);                // load CID
+        //    }
+        //}
 
-        private bool IsValidDrop(DragEventArgs e)
-        {
-            return false; // TODO used to be able to process a path, CID or FCID
-            //return (DropPath(e) != null || DropCID(e) != null || DropFCID(e) != null);
-        }
+        //private bool IsValidDrop(DragEventArgs e)
+        //{
+        //    return false; // TODO used to be able to process a path, CID or FCID
+        //    //return (DropPath(e) != null || DropCID(e) != null || DropFCID(e) != null);
+        //}
 
-        private string DropPath(DragEventArgs e)
-        {
-            Array data = e.Data.GetData("FileName") as Array;
-            // TODO allow dropping multiple paths??
-            if (data != null && data.Length == 1 && data.GetValue(0) is String)
-            {
-                var fn = ((string[]) data)[0];
-                if (Directory.Exists(fn))
-                    return Path.GetFullPath(fn);
-            }
-            return null;
-        }
-
-        // TODO can this disappear and use ImageProcessor variant instead?
-        // process all files/directories in a path
-        private void processFiles(string path, StreamWriter outf, Func<string,StreamWriter,bool> processor )
-        {
-            var token = Task.Factory.CancellationToken;
-            Task.Factory.StartNew(() => { ShowStatus("Processed " + _counter); }, token, TaskCreationOptions.None, _guiContext);
-
-            var alltasks = new List<Task>();
-
-            string[] dirs = Directory.GetDirectories(path);
-            string[] files = Directory.GetFiles(path);
-            foreach (var aFile in files)
-            {
-                string file = aFile;
-                alltasks.Add( Task.Factory.StartNew(() => processor(file, outf)));
-                _counter++;
-                if (_counter % 5 == 0)
-                    Task.Factory.StartNew(() => { ShowStatus("Processed " + _counter); }, token, TaskCreationOptions.None, _guiContext);
-            }
-
-            Task.Factory.StartNew(() => { ShowStatus("Processed " + _counter); }, token, TaskCreationOptions.None, _guiContext);
-
-            alltasks.AddRange(dirs.Select(aDir => Task.Factory.StartNew(() => processFiles(aDir, outf, processor))));
-            if (alltasks.Count > 0)
-            {
-                Task.WaitAll(alltasks.ToArray());
-            }
-
-            Task.Factory.StartNew(() => { ShowStatus("Processed " + _counter); }, token, TaskCreationOptions.None, _guiContext);
-        }
-
-        // TODO can this move to ImageProcessor?
-        // Pixelate tester - create a PNG file showing the pixelated result
-        private bool pixelateTest(string afile, StreamWriter outf)
-        {
-            try
-            {
-                var fn0 = Path.GetDirectoryName(afile) + "\\";
-                var fn1 = Path.GetFileNameWithoutExtension(afile);
-                var bmp = new Bitmap(afile);
-                var pixY = bmp.Height / PIX_COUNT;
-                var pixX = bmp.Width / PIX_COUNT;
-
-                var pix = Pixelate.PixelateImg(bmp, pixX, pixY);
-                var fn = fn0 + fn1 + "_pix.png"; // +Path.GetExtension(afile);
-                pix.Save(fn, ImageFormat.Png); //bmp.RawFormat);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show(afile);
-            }
-            return true;
-        }
+        //private string DropPath(DragEventArgs e)
+        //{
+        //    Array data = e.Data.GetData("FileName") as Array;
+        //    // TODO allow dropping multiple paths??
+        //    if (data != null && data.Length == 1 && data.GetValue(0) is String)
+        //    {
+        //        var fn = ((string[]) data)[0];
+        //        if (Directory.Exists(fn))
+        //            return Path.GetFullPath(fn);
+        //    }
+        //    return null;
+        //}
 
         public class FileData
         {
@@ -464,26 +409,12 @@ namespace pixel
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //DoExit();
             Close();
         }
 
         private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // TODO Show about dialog
-        }
-
-        private void PixTestToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // for testing: pixelate all images in a directory
-
-            var fbd = new FolderBrowserDialog();
-            if (DialogResult.OK == fbd.ShowDialog())
-            {
-                string path = fbd.SelectedPath;
-                _guiContext = TaskScheduler.FromCurrentSynchronizationContext();
-                processFiles(path, null, pixelateTest);
-            }
         }
 
         public void ShowStatus(string text)
