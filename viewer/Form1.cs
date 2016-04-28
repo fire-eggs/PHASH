@@ -505,48 +505,58 @@ namespace pixel
         // 2: suffix number
         private bool MoveFile(string nameForm, string destPath, string destName, string origPath, bool mustRename)
         {
-            // TODO dest path could be > 256 char limit. The trick is to drop characters from the end of the filename, not the path or extension.
-
             if (!mustRename)
             {
                 string destpath = Path.Combine(destPath, destName);
                 if (!File.Exists(destpath))
                 {
                     // First see if plain move works (no name conflict)
-                    try
-                    {
-                        log(string.Format("Attempt to move {0} to {1}", origPath, destpath));
-                        File.Move(origPath, destpath);
+                    if (SimpleMoveFile(origPath, destpath) == MOVE_OK)
                         return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        log(ex.Message);
-                    }
                 }
             }
 
             // Then test up to 10 numbered names, using provided format
-            int i = 0;
-            bool ok = false;
-            while (!ok && i < 10)
+            for (int i = 0; i < 10; i++)
             {
                 string newname = string.Format(nameForm, destPath, i, destName);
-
-                try
+                int res = SimpleMoveFile(origPath, newname);
+                if (res == MOVE_OK)
+                    return true;
+                if (res == MOVE_FILE_TOO_LONG)
                 {
-                    log(string.Format("Attempt to move {0} to {1}", origPath, newname));
-                    File.Move(origPath, newname);
-                    ok = true;
-                }
-                catch (Exception ex)
-                {
-                    log(ex.Message);
-                    i++;
+                    // TODO provide a rename assistant? How many characters need to be removed?
+                    MessageBox.Show("The resulting file path is too long. Rename the original or pick a shorter destination. See the log for details.");
+                    return false;
                 }
             }
 
-            return ok;
+            MessageBox.Show("All attempts to move the file failed. See the log for details.");
+            return false;
+        }
+
+        private int MOVE_OK = 1;
+        private int MOVE_FILE_TOO_LONG = -1;
+        private int MOVE_FAIL = 0;
+
+        private int SimpleMoveFile(string origPath, string destpath)
+        {
+            try
+            {
+                log(string.Format("Attempt to move {0} to {1}", origPath, destpath));
+                File.Move(origPath, destpath);
+                return MOVE_OK;
+            }
+            catch (PathTooLongException)
+            {
+                log("Destination path too long.");
+                return MOVE_FILE_TOO_LONG;
+            }
+            catch (Exception ex)
+            {
+                log(ex.Message);
+                return MOVE_FAIL;
+            }
         }
 
         // Helper to allocate the ShowDiff dialog once
