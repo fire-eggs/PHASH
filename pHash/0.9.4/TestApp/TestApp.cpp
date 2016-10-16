@@ -89,11 +89,19 @@ bool hasEnding(std::string const &fullString, std::string const &ending)
 // TODO output the filestring MINUS the base path.
 void processFile(char *filepath, char *basepath, FILE *fp)
 {
-	unsigned long crc;
-	unsigned long long tmpHash = do_hash2(filepath, crc);
-	if (tmpHash <= 0)
-		return;
-	fprintf(fp, "%llu|%lu|%s\n", tmpHash, crc, filepath);
+	try
+	{
+		unsigned long crc;
+		unsigned long long tmpHash = do_hash2(filepath, crc);
+		if (tmpHash <= 0)
+			return;
+		fprintf(fp, "%llu|%lu|%s\n", tmpHash, crc, filepath);
+	}
+	catch (...)
+	{
+		printf("Except: %s", filepath);
+		throw;
+	}
 }
 
 #include <string>
@@ -121,6 +129,12 @@ void processTree(const char *path, char *basepath, FILE *fp)
 
 		if (dent->d_name[0] == '.')
 			continue;
+
+		if (strlen(thispath) + strlen(dent->d_name) > 256)
+		{
+			printf("Path too long:%s", dent->d_name);
+			continue;
+		}
 
 		sprintf(apath, "%s\\%s", thispath, dent->d_name);
 		stat(apath, &st);
@@ -179,13 +193,13 @@ bool exists(const std::string& name)
 void doit(char *filename)
 {
 	startup();
+	FILE *fp = NULL;
 
 	__try
 	{
 		char filepath[257];
 		sprintf(filepath, "%s\\gdi_trial.phashc", filename);
 
-		FILE *fp;
 		fopen_s(&fp, filepath, "w+");
 		fprintf(fp, "%s\n", filename);
 
@@ -195,6 +209,11 @@ void doit(char *filename)
 	__finally
 	{
 		shutdown();
+		if (fp != NULL)
+		{
+			fflush(fp);
+			fclose(fp);
+		}
 	}
 }
 
