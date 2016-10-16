@@ -9,7 +9,7 @@ namespace pixel
 {
     public partial class ShowDiff : Form
     {
-        private bool _swap;
+        private bool _showLeft;
         private Size _mySize;
         private Point _myLoc;
 
@@ -24,26 +24,30 @@ namespace pixel
 
         public bool Stretch { get; set; }
 
-        public bool StartWithLeft { get; set; }
+        public bool StartWithLeft
+        {
+            set
+            {
+                _showLeft = value;
+            }
+        }
 
         public Form1.Pair Pair { private get; set; }
 
         private string InitText
         {
-            get { return StartWithLeft ? "Left Image" : "Right Image"; }
+            get { return _showLeft ? "Left Image" : "Right Image"; }
         }
         private string SwapText
         {
-            get { return StartWithLeft ? "Right Image" : "Left Image"; }
+            get { return _showLeft ? "Right Image" : "Left Image"; }
         }
 
         private string PairPath
         {
             get
             {
-                if (StartWithLeft)
-                    return _swap ? Pair.FileRight.Name : Pair.FileLeft.Name;
-                return _swap ? Pair.FileLeft.Name : Pair.FileRight.Name;
+                return _showLeft ? Pair.FileLeft.Name : Pair.FileRight.Name;
             }
         }
 
@@ -65,14 +69,14 @@ namespace pixel
 
             try
             {
-                if (!_swap)
+                if (!_showLeft)
                 {
                     Text = Diff ? "Left vs Right" : InitText;
                     pictureBox1.Image = Diff ? LVR : Image.OpenNoLock(PairPath);
                 }
                 else
                 {
-                    Text = Diff ? "Right vs Left" : SwapText;
+                    Text = Diff ? "Right vs Left" : InitText;
                     pictureBox1.Image = Diff ? RVL : Image.OpenNoLock(PairPath);
                 }
             }
@@ -83,7 +87,7 @@ namespace pixel
 
         private void btnSwap_Click(object sender, EventArgs e)
         {
-            _swap = !_swap;
+            _showLeft = !_showLeft;
             doImage();
         }
 
