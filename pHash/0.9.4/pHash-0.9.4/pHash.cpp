@@ -614,19 +614,19 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 	if (!filename)	return -1;
 
 	Bitmap *gdiBmp = new Bitmap(filename);
-	if (gdiBmp == NULL) return -1;
+	if (gdiBmp == NULL) return -2;
 
 	int bmpW = gdiBmp->GetWidth();
 	int bmpH = gdiBmp->GetHeight();
 
-	if (bmpW < 1 || bmpH < 1) return -1;
+	if (bmpW < 1 || bmpH < 1) return -3;
 
 	CImg<uint8_t> src(bmpW, bmpH, 1, 3); // TODO should be 4 for spectrum?
 
 	if (FillCImgFromBitmap(src, gdiBmp) < 0)
 	{
 		delete gdiBmp;
-		return -1;
+		return -4;
 	}
 
 	uint8_t *bits = src.data();
@@ -640,7 +640,7 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 	}
 	catch (CImgInstanceException)
 	{
-		res = -1;
+		res = -5;
 	}
 
 	delete gdiBmp;
