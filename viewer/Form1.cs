@@ -1,15 +1,13 @@
+using JWC;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.IO;
-using JWC;
 
 // BUG: flipping "filter same CID" doesn't clear listbox when only one phash loaded
 // TODO: on move or rename, update pic box ASAP ?
@@ -63,7 +61,7 @@ namespace pixel
         public Form1()
         {
             InitializeComponent();
-            _data = new FileSet(); //List<FileData>();
+//            _data = new FileSet(); //List<FileData>();
 
             AllowDrop = false;  // TODO restore drag-and-drop support?
             //DragDrop += Form1_DragDrop;
@@ -73,6 +71,7 @@ namespace pixel
             _logPath = Path.Combine(folder, "imgComp.log");
 
             mnuMRU = new MruStripMenuInline(fileToolStripMenuItem, recentFilesToolStripMenuItem, OnMRU );
+            mnuMRU.MaxEntries = 6;
         }
 
         private void OnMRU(int number, string filename)
@@ -195,7 +194,7 @@ namespace pixel
                         if (other.CRCMatch)
                             return +1;
                     }
-                    return String.CompareOrdinal(FileLeft.Name, other.FileLeft.Name);
+// Perf. hit                    return String.CompareOrdinal(FileLeft.Name, other.FileLeft.Name);
                 }
 
                 return delta;
@@ -210,6 +209,11 @@ namespace pixel
                 //                if (Equals(op, "F"))
                 return i.ToString("000") + " : " + FileLeft.Name + " | " + FileRight.Name;
                 //                return Val.ToString("D3") + op + FileLeft.Name + "|" + FileRight.Name;
+            }
+
+            public string TTip()
+            {
+                return string.Format("{0}{1}{2}", FileLeft.Name, Environment.NewLine, FileRight.Name);
             }
         };
 
@@ -249,6 +253,8 @@ namespace pixel
 
         private void FilterOutMatchingCID()
         {
+            if (_pairList == null)
+                return;
             _viewList = new BindingList<Pair>();
             int i = 0;
             foreach (var pair in _pairList)
@@ -266,10 +272,15 @@ namespace pixel
         private void setListbox()
         {
             listBox1.SelectedIndex = -1;
-            if (_viewList.Count > 0)
+            if (_viewList != null && _viewList.Count > 0)
             {
                 listBox1.DataSource = _viewList; //.GetRange(0, Math.Min(1000, _viewList.Count));
                 listBox1.SelectedIndex = 0;
+            }
+            else
+            {
+                listBox1.DataSource = null;
+                ClearPictureBoxes();
             }
         }
 
@@ -398,13 +409,14 @@ namespace pixel
             listBox1.DataSource = null;
             listBox1.SelectedItem = null;
 
-            _data = new FileSet(); // List<FileData>();
+            _data = null; //new FileSet(); // List<FileData>();
             _pairList = null; // failure to release memory
             _viewList = null;
+            ClearPictureBoxes();
 
-            pictureBox1.ImageLocation = "";
-            pictureBox2.ImageLocation = "";
             GC.Collect();
+
+//            Console.WriteLine("Total Memory: {0}", GC.GetTotalMemory(false));
         }
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -606,7 +618,10 @@ namespace pixel
             if (res == null)
                 return;
             string text = String.Format("{0}{1}{2}{1}", res.FileLeft.Name, Environment.NewLine, res.FileRight.Name);
-            Clipboard.SetText(text);
+
+            // KBR 20170110 for some reason the clipboard operation failed
+            // TODO still need a try/catch anyway?
+            Clipboard.SetDataObject(text, true, 5, 100);
         }
 
         private void btnStretchDiff_Click(object sender, EventArgs e)
@@ -637,9 +652,9 @@ namespace pixel
 
             var ofd = new OpenFileDialog();
             ofd.Multiselect = false;
-            ofd.Filter = "PHASH files (*.phash)|*.phash|PHASHC files (*.phashc)|*.phashc";
+            ofd.Filter = "PHASHC files (*.phashc)|*.phashc|PHASHD files (*.phashd)|*.phashd";
             ofd.FilterIndex = 1;
-            ofd.DefaultExt = "PHASH";
+            ofd.DefaultExt = "PHASHC";
             ofd.CheckFileExists = true;
             if (DialogResult.OK != ofd.ShowDialog(this))
             {
@@ -649,11 +664,26 @@ namespace pixel
             ProcessPHash(ofd.FileName);
         }
 
+        private void ClearPictureBoxes()
+        {
+            if (pictureBox1.Image != null) 
+                pictureBox1.Image.Dispose();
+            pictureBox1.Image = null;
+            pictureBox1.ImageLocation = "";
+            if (pictureBox2.Image != null) 
+                pictureBox2.Image.Dispose();
+            pictureBox2.Image = null;
+            pictureBox2.ImageLocation = "";
+        }
+
         private void ProcessPHash(string path)
         {
+            if (_data == null)
+                _data = new FileSet();
+
             listBox1.DataSource = null; // prevent preliminary updates
-            pictureBox1.ImageLocation = "";
-            pictureBox2.ImageLocation = "";
+            _viewList = null;
+            ClearPictureBoxes();
 
             _cidCount++; // loading (another) PHASH
 
@@ -736,7 +766,7 @@ namespace pixel
             for (int i = 0; i < _data.Count; i++)
             {
                 CompareOnePFile(i);
-                if (i % 10 == 0)
+                if (i % 100 == 0) // 20170110 reduce updates from 10 to 100: slight speedup & less memory usage
                 {
                     int i1 = i;
                     Task.Factory.StartNew(() => ShowStatus("Comparing " + i1), Task.Factory.CancellationToken, TaskCreationOptions.None, _guiContext);
@@ -744,7 +774,7 @@ namespace pixel
             }
         }
 
-        private const int PHASH_THRESHOLD = 25;
+        private const int PHASH_THRESHOLD = 18; // 20170110 reduce number of useless entries being added 25;
 
         private void CompareOnePFile(int me)
         {
@@ -801,7 +831,9 @@ namespace pixel
             string folder = _moveDlg.SelectedPath;
 
             // pattern only necessary if rename required
-            MoveFile(@"{0}\{1}_{2}", folder, Path.GetFileName(pb.ImageLocation), pb.ImageLocation, false);          
+            if (MoveFile(@"{0}\{1}_{2}", folder, Path.GetFileName(pb.ImageLocation), pb.ImageLocation, false))
+                RemoveMissingFile(pb.ImageLocation);
+          
         //private void moveFile(string nameForm, string destPath, string destName, string origPath, bool mustRename)
         }
 
@@ -820,7 +852,7 @@ namespace pixel
         {
             var pb = GetPictureBox(sender);
             if (_renameDlg == null)
-                _renameDlg = new RenameDlg() { Owner = this };
+                _renameDlg = new RenameDlg { Owner = this };
             _renameDlg.OriginalName = Path.GetFileName(pb.ImageLocation);
             _renameDlg.OtherName = Path.GetFileName(pb == pictureBox1 ? pictureBox2.ImageLocation : pictureBox1.ImageLocation);
             if (_renameDlg.ShowDialog() == DialogResult.OK)
@@ -856,12 +888,34 @@ namespace pixel
         // reference that file from the view list.
         private void RemoveMissingFile(string path)
         {
+            // TODO still having problems around the end of the list trying to set SelectedIndex past the end
+
             int oldSel = listBox1.SelectedIndex;
             int len = _viewList.Count - 1;
             for (int i = len; i >= 0; i--)
                 if (_viewList[i].FileLeft.Name == path || _viewList[i].FileRight.Name == path)
                     _viewList.RemoveAt(i);
-            listBox1.SelectedIndex = Math.Max(0,oldSel - 1);
+            int newSel = Math.Max(0,oldSel - 1);
+            listBox1.SelectedIndex = newSel;
+            if (oldSel == 0)
+                ListBox1_SelectedIndexChanged(null,null);
+        }
+
+        private void listBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            // Tooltip handling for the listbox: allows seeing full paths without adding horizontal scroll
+            ListBox lb = (ListBox) sender;
+            int index = lb.IndexFromPoint(e.Location);
+            if (index < 0)
+            {
+                toolTip1.Hide(lb);
+                return;
+            }
+
+            Pair pair = _viewList[index];
+            string ttString = pair.TTip();
+            if (toolTip1.GetToolTip(lb) != ttString)
+                toolTip1.SetToolTip(lb, ttString);
         }
     }
 }

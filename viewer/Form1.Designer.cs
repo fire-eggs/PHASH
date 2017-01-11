@@ -55,6 +55,7 @@ namespace pixel
             this.pixContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.moveToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.menuStrip1.SuspendLayout();
@@ -83,6 +84,7 @@ namespace pixel
             this.listBox1.Size = new System.Drawing.Size(1168, 243);
             this.listBox1.TabIndex = 3;
             this.listBox1.SelectedIndexChanged += new System.EventHandler(this.ListBox1_SelectedIndexChanged);
+            this.listBox1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listBox1_MouseMove);
             this.listBox1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listBox1_MouseUp);
             // 
             // pictureBox1
@@ -192,7 +194,7 @@ namespace pixel
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.AboutToolStripMenuItem_Click);
             // 
@@ -442,6 +444,7 @@ namespace pixel
         private ToolStripMenuItem renameToolStripMenuItem;
         private ToolStripMenuItem logFileToolStripMenuItem;
         private ToolStripMenuItem recentFilesToolStripMenuItem;
+        private ToolTip toolTip1;
 // ReSharper enable InconsistentNaming
         #endregion
 	}
