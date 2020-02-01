@@ -7,7 +7,16 @@ Phase 1:
 Calculate the phash value for all images in a folder and sub-folders. The image paths and phashes are stored in a file.
 
 Phase 2:
-Load a file from phase 1 into a viewer. It compares all image phash values and shows a list of image pairs, ordered by phash simularity. Rows in the list are selected to view the two images side-by-side.
+Load a file from phase 1 into a viewer. It compares all image phash values and shows a list of image pairs, ordered by phash simularity.
+Rows in the list are selected to view the two images side-by-side.
+
+Phase 2a:
+More than one phash file from phase 1 may be loaded into the viewer. An example use case is to compare a separate set of recently
+downloaded images against an existing set, to find out whether the new images already exist or might be better than the existing.
+By using the "Filter same phash" menu, you can focus on matches _between_ the sets, rather than matches _within_ a set.
+
+20200201:
+Updated the repository with the latest changes.
 
 20160411:
 Provide some accumulated changes for the viewer:
