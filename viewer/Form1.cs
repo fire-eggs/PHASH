@@ -30,11 +30,11 @@ namespace pixel
         //private const int THRESHOLD = 2000;
         //private const double FTHRESHOLD = 0.7;
 
-        private string _logPath;
+        private static string _logPath;
 
         protected MruStripMenu mnuMRU;
 
-        public void log(string msg)
+        public static void log(string msg)
         {
             try
             {
@@ -55,6 +55,12 @@ namespace pixel
         public void log(Exception ex)
         {
             string msg = ex.Message + Environment.NewLine + ex.StackTrace;
+            log(msg);
+        }
+
+        public void log(string msg2, Exception ex)
+        {
+            string msg = msg2 + ":" + ex.Message + Environment.NewLine + ex.StackTrace;
             log(msg);
         }
 
@@ -441,6 +447,10 @@ namespace pixel
 
         private void DoExit()
         {
+            // KBR 20200130 Need to restore if minimized
+            if (WindowState == FormWindowState.Minimized)
+                WindowState = FormWindowState.Normal;
+
             // Save current sizes/position
             Settings1.Default.MainSize = Size;
             Settings1.Default.MainLoc = Location;
@@ -449,9 +459,14 @@ namespace pixel
             Settings1.Default.MRUFiles = new StringCollection();
             Settings1.Default.MRUFiles.AddRange(mnuMRU.GetFiles());
 
+            if (!DiffDialog.LastSize.IsEmpty)
+            {
+                Settings1.Default.DlgLoc = DiffDialog.LastLoc;
+                Settings1.Default.DlgSize = DiffDialog.LastSize;
+            }
+
             Settings1.Default.Save();
 
-            // TODO save/load showdiff size/location
             // TODO handle multi monitor
         }
 
@@ -468,6 +483,9 @@ namespace pixel
                 Settings1.Default.MRUFiles.CopyTo(tmp, 0);
                 mnuMRU.SetFiles(tmp);
             }
+
+            DiffDialog.LastLoc = Settings1.Default.DlgLoc;
+            DiffDialog.LastSize = Settings1.Default.DlgSize;
         }
 
         private void FilterSameCIDToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -890,15 +908,22 @@ namespace pixel
         {
             // TODO still having problems around the end of the list trying to set SelectedIndex past the end
 
-            int oldSel = listBox1.SelectedIndex;
-            int len = _viewList.Count - 1;
-            for (int i = len; i >= 0; i--)
-                if (_viewList[i].FileLeft.Name == path || _viewList[i].FileRight.Name == path)
-                    _viewList.RemoveAt(i);
-            int newSel = Math.Max(0,oldSel - 1);
-            listBox1.SelectedIndex = newSel;
-            if (oldSel == 0)
-                ListBox1_SelectedIndexChanged(null,null);
+            try
+            {
+                int oldSel = listBox1.SelectedIndex;
+                int len = _viewList.Count - 1;
+                for (int i = len; i >= 0; i--)
+                    if (_viewList[i].FileLeft.Name == path || _viewList[i].FileRight.Name == path)
+                        _viewList.RemoveAt(i);
+                int newSel = Math.Max(0, oldSel - 1);
+                listBox1.SelectedIndex = newSel;
+                if (oldSel == 0)
+                    ListBox1_SelectedIndexChanged(null, null);
+            }
+            catch (Exception ex)
+            {
+                log(ex); // TODO stop crashing when search runs past end/beginning
+            }
         }
 
         private void listBox1_MouseMove(object sender, MouseEventArgs e)
@@ -916,6 +941,30 @@ namespace pixel
             string ttString = pair.TTip();
             if (toolTip1.GetToolTip(lb) != ttString)
                 toolTip1.SetToolTip(lb, ttString);
+        }
+
+        private void rightDupsToFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (StreamWriter file = new StreamWriter(@"E:\pixel_dups.txt", false))
+            {
+                foreach (Pair pair in _viewList)
+                {
+                    if (pair.Val == 0 && pair.CRCMatch)
+                    {
+                        file.WriteLine(pair.FileRight.Name);
+                    }
+                }
+            }
+        }
+
+        private void lockLeftDupButtonToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            btnLeftAsDup.Enabled = !lockLeftDupButtonToolStripMenuItem.Checked;
+        }
+
+        private void lockRightDupButtonToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            btnRightAsDup.Enabled = !lockRightDupButtonToolStripMenuItem.Checked;
         }
     }
 }

@@ -25,7 +25,7 @@ D Grant Starkweather - dstarkweather@phash.org
 #ifndef _WIN32
 #include "config.h"
 #else
-#define snprintf _snprintf
+//#define snprintf _snprintf
 #include <windows.h>
 #include <gdiplus.h>
 using namespace Gdiplus;
@@ -68,6 +68,14 @@ int ph_num_threads()
     return numCPU;
 }
 #endif
+
+#define stdin  (__acrt_iob_func(0))
+#define stdout (__acrt_iob_func(1))
+#define stderr (__acrt_iob_func(2))
+
+FILE _iob[] = { *stdin, *stdout, *stderr };
+extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
+
 
 const char phash_project[] = "%s. Copyright 2008-2010 Aetilius, Inc.";
 char phash_version[255] = {0};
@@ -568,6 +576,102 @@ int FillCImgFromBitmap(CImg<uint8_t> & img, Bitmap *bm)
 	return 0;
 }
 
+// KBR 2016/10/22 dhash
+// Copied from David J. Oftedal - last seen at http://01101001.net/DifferenceHash.py
+int _ph_dct_dodhash(CImg<uint8_t> *src, ulong64 &hash)
+{
+	// Convert to greyscale
+	CImg<float> meanfilter(7, 7, 1, 1, 1);
+	CImg<float> img;
+	if (src->spectrum() == 3){
+		img = src->RGBtoYCbCr().channel(0).get_convolve(meanfilter);
+	}
+	else if (src->spectrum() == 4){
+		int width = img.width();
+		int height = img.height();
+		int depth = img.depth();
+		img = src->crop(0, 0, 0, 0, width - 1, height - 1, depth - 1, 2).RGBtoYCbCr().channel(0).get_convolve(meanfilter);
+	}
+	else {
+		img = src->channel(0).get_convolve(meanfilter);
+	}
+
+	// Resize to an 8x8
+	// The 'trick' here is to use lanczos interp (6) as it does better quality for downsizing
+	img.resize(8, 8, -100, -100, 6); 
+
+	ulong64 one = 0x0000000000000001;
+	hash = 0x0000000000000000;
+
+	// Start with the 56th pixel so the first pixel has something to compare
+	// against. As the last row of the image is processed right-to-left, the
+	// last pixel examined is not the "64th" pixel.
+	float prevPixel = img(0, 7);
+	for (int row = 0; row < 8; row++)
+	{
+		if (row & 1)
+		{
+			// right-to-left on odd rows
+			for (int col = 7; col >= 0; col--)
+			{
+				hash = hash << 1;
+				float curr = img(col, row);
+				if (curr >= prevPixel)
+					hash |= one;
+				prevPixel = curr;
+			}
+		}
+		else 
+		{
+			// left-to-right on even rows
+			for (int col = 0; col < 8; col++)
+			{
+				hash = hash << 1;
+				float curr = img(col, row);
+				if (curr >= prevPixel)
+					hash |= one;
+				prevPixel = curr;
+			}
+		}
+	}
+	return 0;
+}
+
+int _ph_dct_dophash(CImg<uint8_t> *src, CImg<float> *C, CImg<float> *Ctransp, ulong64 &hash)
+{
+	CImg<float> meanfilter(7, 7, 1, 1, 1);
+	CImg<float> img;
+	if (src->spectrum() == 3){
+		img = src->RGBtoYCbCr().channel(0).get_convolve(meanfilter);
+	}
+	else if (src->spectrum() == 4){
+		int width = img.width();
+		int height = img.height();
+		int depth = img.depth();
+		img = src->crop(0, 0, 0, 0, width - 1, height - 1, depth - 1, 2).RGBtoYCbCr().channel(0).get_convolve(meanfilter);
+	}
+	else {
+		img = src->channel(0).get_convolve(meanfilter);
+	}
+
+	img.resize(32, 32);
+
+	CImg<float> dctImage = (*C)*img*(*Ctransp);
+
+	CImg<float> subsec = dctImage.crop(1, 1, 8, 8).unroll('x');
+
+	float median = subsec.median();
+	ulong64 one = 0x0000000000000001;
+	hash = 0x0000000000000000;
+	for (int i = 0; i< 64; i++){
+		float current = subsec(i);
+		if (current > median)
+			hash |= one;
+		one = one << 1;
+	}
+	return 0;
+}
+
 int _ph_dct_doimagehash(CImg<uint8_t> *src, ulong64 &hash)
 {
 	CImg<float> meanfilter(7, 7, 1, 1, 1);
@@ -586,12 +690,14 @@ int _ph_dct_doimagehash(CImg<uint8_t> *src, ulong64 &hash)
 	}
 
 	img.resize(32, 32);
+	//img.resize(32, 32, -100, -100, 6); // TODO consider downsizing with better quality interpolation
+
 	CImg<float> *C = ph_dct_matrix(32);
 	CImg<float> Ctransp = C->get_transpose();
 
 	CImg<float> dctImage = (*C)*img*Ctransp;
 
-	CImg<float> subsec = dctImage.crop(1, 1, 8, 8).unroll('x');;
+	CImg<float> subsec = dctImage.crop(1, 1, 8, 8).unroll('x');
 
 	float median = subsec.median();
 	ulong64 one = 0x0000000000000001;
@@ -608,6 +714,44 @@ int _ph_dct_doimagehash(CImg<uint8_t> *src, ulong64 &hash)
 }
 
 uint32_t _crc32(uint32_t crc, const uint8_t *buf, size_t size);
+
+int __declspec(dllexport) ph_dct_imagehashW2(const wchar_t *filename, CImg<float> *C, CImg<float> *Ctransp, ulong64 &hash, uint32_t &crcVal)
+{
+	if (!filename)	return -1;
+
+	Bitmap *gdiBmp = new Bitmap(filename);
+	if (gdiBmp == NULL) return -2;
+
+	int bmpW = gdiBmp->GetWidth();
+	int bmpH = gdiBmp->GetHeight();
+
+	if (bmpW < 1 || bmpH < 1) return -3;
+
+	CImg<uint8_t> src(bmpW, bmpH, 1, 3); // TODO should be 4 for spectrum?
+
+	if (FillCImgFromBitmap(src, gdiBmp) < 0)
+	{
+		delete gdiBmp;
+		return -4;
+	}
+
+	uint8_t *bits = src.data();
+	crcVal = 0;
+	crcVal = _crc32(crcVal, bits, src.width() * src.height());
+
+	int res;
+	try
+	{
+		res = _ph_dct_dophash(&src, C, Ctransp, hash);
+	}
+	catch (CImgInstanceException)
+	{
+		res = -5;
+	}
+
+	delete gdiBmp;
+	return res;
+}
 
 int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &hash, uint32_t &crcVal)
 {
@@ -637,6 +781,45 @@ int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *filename, ulong64 &ha
 	try
 	{
 		res = _ph_dct_doimagehash(&src, hash);
+	}
+	catch (CImgInstanceException)
+	{
+		res = -5;
+	}
+
+	delete gdiBmp;
+	return res;
+}
+
+// KBR 2016/10/22 : dhash + crc
+int __declspec(dllexport) gibber(const wchar_t *filename, ulong64 &hash, uint32_t &crcVal)
+{
+	if (!filename)	return -1;
+
+	Bitmap *gdiBmp = new Bitmap(filename);
+	if (gdiBmp == NULL) return -2;
+
+	int bmpW = gdiBmp->GetWidth();
+	int bmpH = gdiBmp->GetHeight();
+
+	if (bmpW < 1 || bmpH < 1) return -3;
+
+	CImg<uint8_t> src(bmpW, bmpH, 1, 3); // TODO should be 4 for spectrum?
+
+	if (FillCImgFromBitmap(src, gdiBmp) < 0)
+	{
+		delete gdiBmp;
+		return -4;
+	}
+
+	uint8_t *bits = src.data();
+	crcVal = 0;
+	crcVal = _crc32(crcVal, bits, src.width() * src.height());
+
+	int res;
+	try
+	{
+		res = _ph_dct_dodhash(&src, hash);
 	}
 	catch (CImgInstanceException)
 	{

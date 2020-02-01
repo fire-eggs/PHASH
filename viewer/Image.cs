@@ -2127,8 +2127,10 @@ namespace pixel
                 case PixelFormat.Format32bppRgb:
                     return 4;
                 case PixelFormat.Format8bppIndexed:
+                case PixelFormat.Format4bppIndexed: // KBR 20200130 seems to work
                     return 1;
                 default:
+                    Form1.log("unhandled bitmap format");
                     throw new ArgumentException("unhandled image format");
             }
         }
@@ -2260,9 +2262,18 @@ namespace pixel
                 tempImage2 = new Bitmap(fileName2);
 
                 if (GetPixelSize(tempImage1) == 1)
-                    tempImage1 = new Bitmap(tempImage1); // upscale to 24-bit
+                {
+                    var tempImage1u = new Bitmap(tempImage1); // upscale to 24-bit
+                    tempImage1.Dispose();
+                    tempImage1 = tempImage1u;
+                }
+
                 if (GetPixelSize(tempImage2) == 1)
-                    tempImage2 = new Bitmap(tempImage2); // upscale to 24-bit
+                {
+                    var tempImage2u = new Bitmap(tempImage2); // upscale to 24-bit
+                    tempImage2.Dispose();
+                    tempImage2 = tempImage2u;
+                }
 
                 Bitmap res = kbrDiff(tempImage1, tempImage2, stretch);
                 return res;
@@ -2287,6 +2298,7 @@ namespace pixel
             int NewPixelSize = Image.GetPixelSize(NewData);
             int OldPixelSize1 = Image.GetPixelSize(OldData1);
             int OldPixelSize2 = Image.GetPixelSize(OldData2);
+
             for (int x = 0; x < NewBitmap.Width; ++x)
             {
                 for (int y = 0; y < NewBitmap.Height; ++y)
@@ -2297,8 +2309,11 @@ namespace pixel
                     int clrDiff = Math.Abs(Pixel1.R - Pixel2.R +
                                                   Pixel1.G - Pixel2.G +
                                                   Pixel1.B - Pixel2.B);
-                    if (clrDiff < 10)
+
+                    if (clrDiff < 5) // KBR 20200130 lower threshold from 10 to 5 - more differences visible
+                    {
                         Image.SetPixel(NewData, x, y, Color.Black, NewPixelSize);
+                    }
                     else
                         Image.SetPixel(NewData, x, y,
                             Color.FromArgb(Pixel1.R, Pixel1.G, Pixel1.B),

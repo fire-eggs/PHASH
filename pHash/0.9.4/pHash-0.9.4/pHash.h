@@ -296,7 +296,7 @@ int ph_compare_images(const char *file1, const char *file2,double &pcc, double s
  *  /param N - int denoting the size of the square matrix to create.
  *  /return CImg<double> size NxN containing the dct matrix
  */
-static CImg<float>* ph_dct_matrix(const int N);
+CImg<float> __declspec(dllexport) *ph_dct_matrix(const int N);
 
 /*! /brief compute dct robust image hash
  *  /param file string variable for name of file
@@ -307,6 +307,9 @@ static CImg<float>* ph_dct_matrix(const int N);
 int __declspec(dllexport) ph_dct_imagehash(const char* file, ulong64 &hash);
 
 int __declspec(dllexport) ph_dct_imagehashW(const wchar_t *file, ulong64 &hash, uint32_t &crc);
+int __declspec(dllexport) ph_dct_imagehashW2(const wchar_t *filename, CImg<float> *C, CImg<float> *Ctransp, ulong64 &hash, uint32_t &crcVal);
+
+int __declspec(dllexport) gibber(const wchar_t *file, ulong64 &hash, uint32_t &crc);
 
 void __declspec(dllexport) ph_startup();
 

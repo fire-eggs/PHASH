@@ -24,6 +24,18 @@ namespace pixel
 
         public bool Stretch { get; set; }
 
+        public Size LastSize
+        {
+            get { return _mySize; }
+            set { _mySize = value; }
+        }
+
+        public Point LastLoc
+        {
+            get { return _myLoc; }
+            set { _myLoc = value; }
+        }
+
         public bool StartWithLeft
         {
             set

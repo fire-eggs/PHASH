@@ -36,6 +36,9 @@ namespace pixel
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.filterSameCIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rightDupsToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lockLeftDupButtonToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lockRightDupButtonToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -48,6 +51,7 @@ namespace pixel
             this.btnStretchDiff = new System.Windows.Forms.Button();
             this.btnMoveRight = new System.Windows.Forms.Button();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnRightAsDup = new System.Windows.Forms.Button();
             this.btnMoveLeft = new System.Windows.Forms.Button();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -163,7 +167,10 @@ namespace pixel
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.filterSameCIDToolStripMenuItem,
-            this.logFileToolStripMenuItem});
+            this.logFileToolStripMenuItem,
+            this.rightDupsToFileToolStripMenuItem,
+            this.lockLeftDupButtonToolStripMenuItem,
+            this.lockRightDupButtonToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -172,16 +179,39 @@ namespace pixel
             // 
             this.filterSameCIDToolStripMenuItem.CheckOnClick = true;
             this.filterSameCIDToolStripMenuItem.Name = "filterSameCIDToolStripMenuItem";
-            this.filterSameCIDToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.filterSameCIDToolStripMenuItem.Size = new System.Drawing.Size(194, 22);
             this.filterSameCIDToolStripMenuItem.Text = "Filter same PHash";
             this.filterSameCIDToolStripMenuItem.CheckedChanged += new System.EventHandler(this.FilterSameCIDToolStripMenuItem_CheckedChanged);
             // 
             // logFileToolStripMenuItem
             // 
             this.logFileToolStripMenuItem.Name = "logFileToolStripMenuItem";
-            this.logFileToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.logFileToolStripMenuItem.Size = new System.Drawing.Size(194, 22);
             this.logFileToolStripMenuItem.Text = "Log File...";
             this.logFileToolStripMenuItem.Click += new System.EventHandler(this.logFileToolStripMenuItem_Click);
+            // 
+            // rightDupsToFileToolStripMenuItem
+            // 
+            this.rightDupsToFileToolStripMenuItem.Name = "rightDupsToFileToolStripMenuItem";
+            this.rightDupsToFileToolStripMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.rightDupsToFileToolStripMenuItem.Text = "Right dups to File";
+            this.rightDupsToFileToolStripMenuItem.Click += new System.EventHandler(this.rightDupsToFileToolStripMenuItem_Click);
+            // 
+            // lockLeftDupButtonToolStripMenuItem
+            // 
+            this.lockLeftDupButtonToolStripMenuItem.CheckOnClick = true;
+            this.lockLeftDupButtonToolStripMenuItem.Name = "lockLeftDupButtonToolStripMenuItem";
+            this.lockLeftDupButtonToolStripMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.lockLeftDupButtonToolStripMenuItem.Text = "Lock Left Dup Button";
+            this.lockLeftDupButtonToolStripMenuItem.CheckedChanged += new System.EventHandler(this.lockLeftDupButtonToolStripMenuItem_CheckedChanged);
+            // 
+            // lockRightDupButtonToolStripMenuItem
+            // 
+            this.lockRightDupButtonToolStripMenuItem.CheckOnClick = true;
+            this.lockRightDupButtonToolStripMenuItem.Name = "lockRightDupButtonToolStripMenuItem";
+            this.lockRightDupButtonToolStripMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.lockRightDupButtonToolStripMenuItem.Text = "Lock Right Dup Button";
+            this.lockRightDupButtonToolStripMenuItem.CheckedChanged += new System.EventHandler(this.lockRightDupButtonToolStripMenuItem_CheckedChanged);
             // 
             // helpToolStripMenuItem
             // 
@@ -219,14 +249,16 @@ namespace pixel
             // 
             // tableLayoutPanel2
             // 
-            this.tableLayoutPanel2.ColumnCount = 2;
+            this.tableLayoutPanel2.ColumnCount = 3;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize, 0F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.Controls.Add(this.statusStrip1, 0, 2);
-            this.tableLayoutPanel2.Controls.Add(this.pictureBox2, 1, 1);
+            this.tableLayoutPanel2.Controls.Add(this.pictureBox2, 2, 1);
             this.tableLayoutPanel2.Controls.Add(this.pictureBox1, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this.flowLayoutPanel1, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.flowLayoutPanel2, 1, 0);
+			this.tableLayoutPanel2.Controls.Add(this.flowLayoutPanel3, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.flowLayoutPanel2, 2, 0);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(0);
@@ -237,10 +269,12 @@ namespace pixel
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.Size = new System.Drawing.Size(1168, 239);
             this.tableLayoutPanel2.TabIndex = 0;
+
+            this.tableLayoutPanel2.SetColumnSpan(this.pictureBox1, 2);
             // 
             // statusStrip1
             // 
-            this.tableLayoutPanel2.SetColumnSpan(this.statusStrip1, 2);
+            this.tableLayoutPanel2.SetColumnSpan(this.statusStrip1, 3);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.label1});
             this.statusStrip1.Location = new System.Drawing.Point(0, 217);
@@ -257,8 +291,6 @@ namespace pixel
             // flowLayoutPanel1
             // 
             this.flowLayoutPanel1.Controls.Add(this.btnLeftAsDup);
-            this.flowLayoutPanel1.Controls.Add(this.diffBtn);
-            this.flowLayoutPanel1.Controls.Add(this.btnStretchDiff);
             this.flowLayoutPanel1.Controls.Add(this.btnMoveRight);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -280,7 +312,8 @@ namespace pixel
             // 
             // diffBtn
             // 
-            this.diffBtn.Location = new System.Drawing.Point(80, 0);
+            this.diffBtn.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.diffBtn.Location = new System.Drawing.Point(160, 0);
             this.diffBtn.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.diffBtn.Name = "diffBtn";
             this.diffBtn.Size = new System.Drawing.Size(75, 23);
@@ -291,7 +324,8 @@ namespace pixel
             // 
             // btnStretchDiff
             // 
-            this.btnStretchDiff.Location = new System.Drawing.Point(160, 0);
+            this.btnStretchDiff.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.btnStretchDiff.Location = new System.Drawing.Point(240, 0);
             this.btnStretchDiff.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.btnStretchDiff.Name = "btnStretchDiff";
             this.btnStretchDiff.Size = new System.Drawing.Size(75, 23);
@@ -302,7 +336,7 @@ namespace pixel
             // 
             // btnMoveRight
             // 
-            this.btnMoveRight.Location = new System.Drawing.Point(240, 0);
+            this.btnMoveRight.Location = new System.Drawing.Point(80, 0);
             this.btnMoveRight.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.btnMoveRight.Name = "btnMoveRight";
             this.btnMoveRight.Size = new System.Drawing.Size(75, 23);
@@ -310,6 +344,17 @@ namespace pixel
             this.btnMoveRight.Text = "Move Right";
             this.btnMoveRight.UseVisualStyleBackColor = true;
             this.btnMoveRight.Click += new System.EventHandler(this.BtnMoveRight_Click);
+            // 
+            // flowLayoutPanel3
+            // 
+            this.flowLayoutPanel3.Controls.Add(this.diffBtn);
+            this.flowLayoutPanel3.Controls.Add(this.btnStretchDiff);
+            this.flowLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel3.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel3.Margin = new System.Windows.Forms.Padding(0);
+            this.flowLayoutPanel3.Name = "flowLayoutPanel3";
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(250, 25);
+            this.flowLayoutPanel3.TabIndex = 13;
             // 
             // flowLayoutPanel2
             // 
@@ -364,19 +409,19 @@ namespace pixel
             this.moveToToolStripMenuItem,
             this.renameToolStripMenuItem});
             this.pixContextMenuStrip.Name = "pixContextMenuStrip";
-            this.pixContextMenuStrip.Size = new System.Drawing.Size(134, 48);
+            this.pixContextMenuStrip.Size = new System.Drawing.Size(132, 48);
             // 
             // moveToToolStripMenuItem
             // 
             this.moveToToolStripMenuItem.Name = "moveToToolStripMenuItem";
-            this.moveToToolStripMenuItem.Size = new System.Drawing.Size(133, 22);
+            this.moveToToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.moveToToolStripMenuItem.Text = "Move To ...";
             this.moveToToolStripMenuItem.Click += new System.EventHandler(this.moveToToolStripMenuItem_Click);
             // 
             // renameToolStripMenuItem
             // 
             this.renameToolStripMenuItem.Name = "renameToolStripMenuItem";
-            this.renameToolStripMenuItem.Size = new System.Drawing.Size(133, 22);
+            this.renameToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.renameToolStripMenuItem.Text = "Rename ...";
             this.renameToolStripMenuItem.Click += new System.EventHandler(this.renameToolStripMenuItem_Click);
             // 
@@ -431,6 +476,7 @@ namespace pixel
         private Button btnLeftAsDup;
         private FlowLayoutPanel flowLayoutPanel1;
         private FlowLayoutPanel flowLayoutPanel2;
+        private FlowLayoutPanel flowLayoutPanel3;
         private Button diffBtn;
         private ToolStripMenuItem viewToolStripMenuItem;
         private ToolStripMenuItem filterSameCIDToolStripMenuItem;
@@ -445,7 +491,11 @@ namespace pixel
         private ToolStripMenuItem logFileToolStripMenuItem;
         private ToolStripMenuItem recentFilesToolStripMenuItem;
         private ToolTip toolTip1;
-// ReSharper enable InconsistentNaming
+        // ReSharper enable InconsistentNaming
         #endregion
-	}
+
+        private ToolStripMenuItem rightDupsToFileToolStripMenuItem;
+        private ToolStripMenuItem lockLeftDupButtonToolStripMenuItem;
+        private ToolStripMenuItem lockRightDupButtonToolStripMenuItem;
+    }
 }

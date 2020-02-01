@@ -8,16 +8,31 @@
 
 #include "dirent.h"
 #include <sys/stat.h>
+#include "direct.h"
 
 #include "omp.h"
+#include "CImg.h"
+using namespace cimg_library;
+
+#include <string>
+#include <list>
+#include <assert.h>
+
+void logit(char*, char*);
 
 extern "C" {
 		extern int ph_dct_imagehash(const char* file, unsigned long long &hash);
 		extern int ph_dct_imagehashW(wchar_t *filename, unsigned long long &hash, unsigned long &crc);
+		extern int ph_dct_imagehashW2(wchar_t *filename, CImg<float> *, CImg<float> *, unsigned long long &hash, unsigned long &crc);
+		extern int gibber(const wchar_t *filename, unsigned long long &hash, unsigned long &crc);
 		int ph_hamming_distance(unsigned long long hash1, unsigned long long hash2);
 		extern void ph_startup();
 		extern void ph_shutdown();
+		extern CImg<float> *ph_dct_matrix(int);
 }
+
+CImg<float> *dct_matrix;
+CImg<float> dct_transpose;
 
 //unsigned long long do_hash(char *filename)
 //{
@@ -31,17 +46,31 @@ extern "C" {
 //	return hash;
 //}
 
-unsigned long long do_hash2(char *filename, unsigned long &crc)
+unsigned long long do_dhash(char *filename, unsigned long &crc)
 {
 	const size_t cSize = strlen(filename) + 1;
 	wchar_t *wc = new wchar_t[cSize];
-	//std::wstring wc(cSize, L'#');
-	//mbstowcs(&wc[0], filename, cSize);
+	size_t outSize;
+	mbstowcs_s(&outSize, wc, cSize, filename, cSize - 1);
+
+	unsigned long long hash;
+	if (gibber(wc, hash, crc) < 0)
+		return 0;
+	return hash;
+}
+
+unsigned long long do_phash(char *filename, unsigned long &crc)
+{
+	const size_t cSize = strlen(filename) + 1;
+	wchar_t *wc = new wchar_t[cSize];
 	size_t outSize;
 	mbstowcs_s(&outSize, wc, cSize, filename, cSize-1);
 
 	unsigned long long hash;
-	if (ph_dct_imagehashW(wc, hash, crc) < 0)
+	//if (ph_dct_imagehashW(wc, hash, crc) < 0)
+	//	return 0;
+
+	if (ph_dct_imagehashW2(wc, dct_matrix, &dct_transpose, hash, crc) < 0)
 		return 0;
 	return hash;
 }
@@ -89,23 +118,29 @@ bool hasEnding(std::string const &fullString, std::string const &ending)
 // TODO output the filestring MINUS the base path.
 void processFile(char *filepath, char *basepath, FILE *fp)
 {
+	if (strstr(filepath, "phashc") != NULL)
+		return;
+
 	try
 	{
 		unsigned long crc;
-		unsigned long long tmpHash = do_hash2(filepath, crc);
+		unsigned long long tmpHash = do_phash(filepath, crc);
+//		unsigned long long tmpHash = do_dhash(filepath, crc);
 		if (tmpHash <= 0)
+		{
+			logit("Hash fail", filepath);
 			return;
+		}
 		fprintf(fp, "%llu|%lu|%s\n", tmpHash, crc, filepath);
 	}
 	catch (...)
 	{
-		printf("Except: %s", filepath);
-		throw;
+		printf("processFile Except: %s", filepath);
+		//logit("processFile Exception", filepath);
+		//throw;
 	}
 }
 
-#include <string>
-#include <list>
 
 // Process a directory tree: for each jpg file, calculate the phash,
 // and write the hash value and file string to the output file.
@@ -114,50 +149,66 @@ void processTree(const char *path, char *basepath, FILE *fp)
 	std::list<std::string> folders;
 	std::vector<std::string> files;
 
-	char thispath[257];
-	char apath[257];
+	char thispath[514];
+	char apath[514];
 
-	sprintf(thispath, "%s%s", basepath, path);
-	struct dirent *dent;
-	DIR *srcdir = opendir(thispath);
-	if (srcdir == NULL)
-		return;
-
-	while ((dent = readdir(srcdir)) != NULL)
+	DIR *srcdir;
+	try
 	{
-		struct stat st;
+		sprintf(thispath, "%s%s", basepath, path);
+		printf("%s\n", thispath);
 
-		if (dent->d_name[0] == '.')
-			continue;
+		struct dirent *dent;
+		srcdir = opendir(thispath);
+		if (srcdir == NULL)
+			return;
 
-		if (strlen(thispath) + strlen(dent->d_name) > 256)
+		while ((dent = readdir(srcdir)) != NULL)
 		{
-			printf("Path too long:%s", dent->d_name);
-			continue;
-		}
+			struct stat st;
 
-		sprintf(apath, "%s\\%s", thispath, dent->d_name);
-		stat(apath, &st);
+			if (dent->d_name[0] == '.')
+				continue;
 
-		if (st.st_mode & _S_IFDIR) // recurse into subdirectories
-		{
-			sprintf(apath, "%s\\%s", path, dent->d_name);
-			folders.push_back(apath);
-//			processTree(apath, basepath, fp);
+			if (strlen(thispath) + strlen(dent->d_name) > 256)
+			{
+				printf("Path too long:%s", dent->d_name);
+				continue;
+			}
+
+			sprintf(apath, "%s\\%s", thispath, dent->d_name);
+			stat(apath, &st);
+
+			if (st.st_mode & _S_IFDIR) // recurse into subdirectories
+			{
+				sprintf(apath, "%s\\%s", path, dent->d_name);
+				folders.push_back(apath);
+				//			processTree(apath, basepath, fp);
+			}
+			else
+			{
+				files.push_back(apath);
+				//			processFile(apath, basepath, fp);
+			}
 		}
-		else
-		{
-			files.push_back(apath);
-//			processFile(apath, basepath, fp);
-		}
+		closedir(srcdir);
 	}
-	closedir(srcdir);
+	catch (...)
+	{
+		printf("readdir except %s", thispath);
+		if (srcdir != NULL)
+			closedir(srcdir);
+	}
 
 	int max = files.size();
-#pragma omp parallel for
-	for (int dex = 0; dex < max; dex++)
+	if (max != 0)
 	{
-		processFile((char *)(files[dex].c_str()), basepath, fp);
+// fprintf appears not to be thread-safe 20180618
+//#pragma omp parallel for
+		for (int dex = 0; dex < max; dex++)
+		{
+			processFile((char *)(files[dex].c_str()), basepath, fp);
+		}
 	}
 	for (std::list<std::string>::iterator it = folders.begin(); it != folders.end(); ++it)
 	{
@@ -169,9 +220,15 @@ void startup()
 { 
 //	omp_set_num_threads(2);
 	ph_startup(); 
+	dct_matrix = ph_dct_matrix(32);
+	dct_transpose = dct_matrix->get_transpose();
 }
 
-void shutdown() { ph_shutdown(); }
+void shutdown() 
+{ 
+	ph_shutdown(); 
+	delete dct_matrix;
+}
 
 bool exists(const std::string& name) 
 {
@@ -179,12 +236,12 @@ bool exists(const std::string& name)
 	if (stat(name.c_str(), &buffer) != 0)
 	{
 		// stat() on Windows can't handle trailing slashes
-		printf("ERROR: path <%s> doesn't exist! [did you accidentally include a trailing slash?]\n", name);
+		printf("ERROR: path <%s> doesn't exist! [did you accidentally include a trailing slash?]\n", name.c_str());
 		return false;
 	}
 	if ( buffer.st_mode & S_IFREG || !(buffer.st_mode & S_IFDIR))
 	{
-		printf("ERROR: path <%s> is not a folder!\n", name);
+		printf("ERROR: path <%s> is not a folder!\n", name.c_str());
 		return false;
 	}
 	return true;
@@ -192,19 +249,35 @@ bool exists(const std::string& name)
 
 void doit(char *filename)
 {
+	printf("DI1");
+	
 	startup();
+	
+	printf("DI2");
+
 	FILE *fp = NULL;
 
 	__try
 	{
 		char filepath[257];
-		sprintf(filepath, "%s\\gdi_trial.phashc", filename);
+		//sprintf(filepath, "%s\\pixel.phashd", filename);
+		sprintf(filepath, "%s\\pixelLAA.phashc", filename);
 
-		fopen_s(&fp, filepath, "w+");
+		printf("DI2A -");
+		printf(filepath);
+		printf("\n");
+		
+		//fopen_s(&fp, filepath, "w+");
+		fp = fopen(filepath, "w+");
+		printf("DI2A1\n");
 		fprintf(fp, "%s\n", filename);
 
+		printf("DI2B");
+		
 		processTree("", filename, fp);
 		fclose(fp);
+		
+		printf("DI2C");
 	}
 	__finally
 	{
@@ -215,6 +288,22 @@ void doit(char *filename)
 			fclose(fp);
 		}
 	}
+	printf("DI3");
+}
+
+char initial_path[260];
+
+void logit(char *msg1, char *msg2)
+{
+	char logpath[300];
+	strcpy(logpath, initial_path);
+	strcat(logpath, "\\testappLAA.log");
+
+	FILE *fp = NULL;
+	fopen_s(&fp, logpath, "a+");
+	fprintf(fp, "%s:%s\n", msg1, msg2);
+	fflush(fp);
+	fclose(fp);
 }
 
 int main(int argc, char *argv[])
@@ -226,7 +315,25 @@ int main(int argc, char *argv[])
 	}
 
 	if (!exists(argv[1]))
+	{
+		printf("Folder %s doesn't exist!", argv[1]);
 		return 1;
+	}
+
+	char *p = strrchr(argv[0], '\\'); // NOTE: assuming windows!
+	if (p)
+	{
+		p[0] = 0;
+		strcpy(initial_path, argv[0]);
+	}
+	else
+	{
+		char temp[260];
+
+		if (_getcwd(temp, 260) != 0)
+			strcpy(initial_path, temp);
+	}
+	printf("%s\n", initial_path);
 
 	doit(argv[1]);
 
