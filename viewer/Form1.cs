@@ -870,7 +870,11 @@ namespace pixel
         {
             var pb = GetPictureBox(sender);
             if (_renameDlg == null)
-                _renameDlg = new RenameDlg { Owner = this };
+            {
+                _renameDlg = new RenameDlg {Owner = this};
+                _renameDlg.StartPosition = FormStartPosition.CenterParent;
+            }
+
             _renameDlg.OriginalName = Path.GetFileName(pb.ImageLocation);
             _renameDlg.OtherName = Path.GetFileName(pb == pictureBox1 ? pictureBox2.ImageLocation : pictureBox1.ImageLocation);
             if (_renameDlg.ShowDialog() == DialogResult.OK)
@@ -878,7 +882,6 @@ namespace pixel
                 // pattern only necessary if rename required
                 if (MoveFile(@"{0}\{1}_{2}", Path.GetDirectoryName(pb.ImageLocation), _renameDlg.Result, pb.ImageLocation, false))
                     RemoveMissingFile(pb.ImageLocation);
-                //private void moveFile(string nameForm, string destPath, string destName, string origPath, bool mustRename)
             }
         }
 
