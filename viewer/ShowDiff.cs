@@ -83,13 +83,13 @@ namespace pixel
             {
                 if (!_showLeft)
                 {
-                    Text = Diff ? "Left vs Right" : InitText;
                     pictureBox1.Image = Diff ? LVR : Image.OpenNoLock(PairPath);
+                    Text = Diff ? "Left vs Right" : InitText;
                 }
                 else
                 {
-                    Text = Diff ? "Right vs Left" : InitText;
                     pictureBox1.Image = Diff ? RVL : Image.OpenNoLock(PairPath);
+                    Text = Diff ? "Right vs Left" : InitText;
                 }
             }
             catch (Exception)
