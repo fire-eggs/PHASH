@@ -292,7 +292,7 @@ namespace pixel
 
         private void ThreadCompareDone()
         {
-            log(string.Format("compare done: {0}", _pairList.Count));
+            log($"compare done: {_pairList.Count}");
 
             try
             {
@@ -951,10 +951,13 @@ namespace pixel
                 for (int i = len; i >= 0; i--)
                     if (_viewList[i].FileLeft.Name == path || _viewList[i].FileRight.Name == path)
                         _viewList.RemoveAt(i);
-                int newSel = Math.Max(0, oldSel - 1);
-                listBox1.SelectedIndex = newSel;
-                if (oldSel == 0)
-                    ListBox1_SelectedIndexChanged(null, null);
+
+                ListBox1_SelectedIndexChanged(null,null);
+
+                //int newSel = Math.Min(len-1, oldSel);
+                //listBox1.SelectedIndex = newSel;
+                //if (oldSel == 0)
+                //    ListBox1_SelectedIndexChanged(null, null);
             }
             catch (Exception ex)
             {
