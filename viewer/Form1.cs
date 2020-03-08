@@ -311,19 +311,31 @@ namespace pixel
             }
         }
 
-        private void LoadImage(PictureBox control, string filename)
+        private void LoadImage(PictureBox control, string filename, System.Drawing.Image img)
         {
-            control.SizeMode = PictureBoxSizeMode.Zoom;
-            control.ImageLocation = filename;
             try
             {
-                control.Image = Image.OpenNoLock(filename);
+                control.SizeMode = PictureBoxSizeMode.Zoom;
+                control.ImageLocation = filename;
+                control.Image = img;
             }
             catch (Exception)
             {
                 control.SizeMode = PictureBoxSizeMode.CenterImage;
                 control.Image = control.ErrorImage;
                 control.ImageLocation = "";
+            }
+        }
+
+        private System.Drawing.Image LoadImage(string filename)
+        {
+            try
+            {
+                return Image.OpenNoLock(filename);
+            }
+            catch (Exception e)
+            {
+                return null;
             }
         }
 
@@ -336,45 +348,66 @@ namespace pixel
                 return;
             }
 
-            LoadImage(pictureBox1, res.FileLeft.Name);
-            LoadImage(pictureBox2, res.FileRight.Name);
-
-            bool fail1 = string.IsNullOrEmpty(pictureBox1.ImageLocation);
-            bool fail2 = string.IsNullOrEmpty(pictureBox2.ImageLocation);
-
-            if (!fail1 && !fail2)
+            bool existL = File.Exists(res.FileLeft.Name);
+            bool existR = File.Exists(res.FileRight.Name);
+            if (!existL || !existR)
             {
-                var size1 = pictureBox1.Image.Size;
-                var size2 = pictureBox2.Image.Size;
-
-                try
-                {
-                    var info1 = new FileInfo(res.FileLeft.Name);
-                    var info2 = new FileInfo(res.FileRight.Name); // 20151028 path written to phash is invalid/incorrect (japanese characters in file name)
-
-                    double sz1 = info1.Length / 1024.0;
-                    double sz2 = info2.Length / 1024.0;
-
-                    ShowStatus(string.Format("({0},{1})[{4,-12:F}K] vs ({2},{3})[{5,-12:F}K]", size1.Height, size1.Width, size2.Height, size2.Width, sz1, sz2));
-
-                    diffBtn.Enabled = (size1 == size2);
-                    btnStretchDiff.Enabled = true;
-                }
-                catch (Exception)
-                {
-                    ShowStatus("");
-                    diffBtn.Enabled = false;
-                    btnStretchDiff.Enabled = false;
-                }
+                clearOnFail();
+                return;
             }
-            else
+
+            var imgL = LoadImage(res.FileLeft.Name);
+            var imgR = LoadImage(res.FileRight.Name);
+
+            existL = imgL == null;
+            existR = imgR == null;
+            var animL = !existL && ImageAnimator.CanAnimate(imgL);
+            var animR = !existR && ImageAnimator.CanAnimate(imgR);
+
+            // a) file may exist but fail to load
+            // b) if one image is animated and the other is not, don't show
+            if (animR != animL || existL || existR)
+            {
+                clearOnFail();
+                return;
+            }
+
+            LoadImage(pictureBox1, res.FileLeft.Name, imgL);
+            LoadImage(pictureBox2, res.FileRight.Name, imgR);
+
+            var size1 = pictureBox1.Image.Size;
+            var size2 = pictureBox2.Image.Size;
+
+            try
+            {
+                var info1 = new FileInfo(res.FileLeft.Name);
+                var info2 = new FileInfo(res.FileRight.Name); 
+
+                double sz1 = info1.Length / 1024.0;
+                double sz2 = info2.Length / 1024.0;
+
+                ShowStatus(string.Format("({0},{1})[{4,-12:F}K] vs ({2},{3})[{5,-12:F}K]", 
+                           size1.Height, size1.Width, 
+                           size2.Height, size2.Width, sz1, sz2));
+
+                diffBtn.Enabled = (size1 == size2);
+                btnStretchDiff.Enabled = true;
+            }
+            catch (Exception)
             {
                 ShowStatus("");
                 diffBtn.Enabled = false;
                 btnStretchDiff.Enabled = false;
-                if (fail1)
+            }
+
+            void clearOnFail()
+            {
+                ShowStatus("");
+                diffBtn.Enabled = false;
+                btnStretchDiff.Enabled = false;
+                if (!existL)
                     RemoveMissingFile(res.FileLeft.Name);
-                if (fail2)
+                if (!existR)
                     RemoveMissingFile(res.FileRight.Name);
             }
         }
