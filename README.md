@@ -1,3 +1,9 @@
+**With a Little Help From ...**
+
+![logo1](https://github.com/fire-eggs/yagp/blob/master/Files/jetbrains_sm.png) - [JetBrains](https://www.jetbrains.com/) : the Acme of .NET tool suites!
+
+![logo2](https://github.com/fire-eggs/yagp/blob/master/Files/deleaker_logo.png) - [Deleaker](https://www.deleaker.com) : the _best_ tool for finding memory, GDI and other leaks!
+
 # PHASH
 My implementation of "perceptual hash" (phash) for images.
 
@@ -15,6 +21,26 @@ More than one phash file from phase 1 may be loaded into the viewer. An example 
 downloaded images against an existing set, to find out whether the new images already exist or might be better than the existing.
 By using the "Filter same phash" menu, you can focus on matches _between_ the sets, rather than matches _within_ a set.
 
+### Viewer Screen Cap
+![annotated screen cap](Capture_anno.PNG)
+
+Two PHash files have been loaded.
+1. The list of 'matched' files. The first column shows how 'close' the files match (lower is closer).
+2. The currently selected pair of files are show side-by-side, at the same size.
+3. The image dimensions and file size of the selected pair of files.
+4. You can mark the "right side" file as a duplicate or move it into the left-side folder.
+5. You can mark the "left side" file as a duplicate or move it into the right-side folder. In this screen cap, the left 'Dup' 
+button has been deliberately disabled (via a menu) as the left side is considered the "master" set.
+6. The difference window in action. By clicking the 'Diff' button, the per-pixel differences between the two files is shown.
+You can see the difference picture at actual size or fit to window (as shown in the screen cap). If the two images are not
+the same size, you can use the 'Diff - Stretch' button to view the differences where the smaller image has been resized to
+match the larger.
+
+Not shown: "Filter same phash" option has been used to filter out duplicates within each Phash file.
+Not shown: double-clicking on either of the two images in the area marked '2' will invoke the viewing window to show the
+actual images, allowing you to examine them "as is" at the same size.
+
+### History
 20200201:
 Updated the repository with the latest changes.
 
