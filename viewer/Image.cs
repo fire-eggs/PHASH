@@ -2328,6 +2328,81 @@ namespace pixel
             return NewBitmap;
         }
 
+        private static byte GetBitsPerPixel(PixelFormat pixelFormat)
+        {
+            switch (pixelFormat)
+            {
+                case PixelFormat.Format24bppRgb:
+                    return 24;
+                case PixelFormat.Format32bppArgb:
+                case PixelFormat.Format32bppPArgb:
+                case PixelFormat.Format32bppRgb:
+                    return 32;
+                default:
+                    throw new ArgumentException("Only 24 and 32 bit images are supported");
+            }
+        }
+
+
+        public static unsafe Bitmap kbrDiffBaseFast(Bitmap image1, Bitmap image2)
+        {
+            Bitmap outBitmap = new Bitmap(image1.Width, image1.Height, image1.PixelFormat);
+
+            var rect = new Rectangle(0, 0, image1.Width, image1.Height);
+            BitmapData b1Data = image1.LockBits(rect, ImageLockMode.ReadOnly, image1.PixelFormat);
+            BitmapData b2Data = image2.LockBits(rect, ImageLockMode.ReadOnly, image2.PixelFormat);
+            BitmapData outData = outBitmap.LockBits(rect, ImageLockMode.WriteOnly, outBitmap.PixelFormat);
+
+            byte b1Bpp = GetBitsPerPixel(image1.PixelFormat);
+            byte b2Bpp = GetBitsPerPixel(image2.PixelFormat);
+
+            byte* b1Scan0 = (byte*)b1Data.Scan0.ToPointer();
+            byte* b2Scan0 = (byte*)b2Data.Scan0.ToPointer();
+            byte* b3Scan0 = (byte*)outData.Scan0.ToPointer();
+
+            for (int y = 0; y < b1Data.Height; y++)
+                for (int x = 0; x < b1Data.Width; x++)
+                {
+                    byte* b1Pixel = b1Scan0 + y * b1Data.Stride + x * b1Bpp / 8;
+                    byte* b2Pixel = b2Scan0 + y * b2Data.Stride + x * b2Bpp / 8;
+                    byte* b3Pixel = b3Scan0 + y * b1Data.Stride + x * b1Bpp / 8;
+
+                    if (b1Bpp == 32)
+                    {
+                        int clrDiff = Math.Abs((b1Pixel[0] - b2Pixel[0]) + (b1Pixel[1] - b2Pixel[1]) + (b1Pixel[2] - b2Pixel[2]));
+                        if (clrDiff < 5)
+                        {
+                            b3Pixel[0] = b3Pixel[1] = b3Pixel[2] = 0;
+                            b3Pixel[3] = 255;
+                        }
+                        else
+                        {
+                            b3Pixel[0] = b1Pixel[0];
+                            b3Pixel[1] = b1Pixel[1];
+                            b3Pixel[2] = b1Pixel[2];
+                            b3Pixel[3] = 255;
+                        }
+                    }
+                    else
+                    {
+                        int clrDiff = Math.Abs((b1Pixel[0] - b2Pixel[0]) + (b1Pixel[1] - b2Pixel[1]) + (b1Pixel[2] - b2Pixel[2]));
+                        if (clrDiff < 5)
+                            b3Pixel[0] = b3Pixel[1] = b3Pixel[2] = 0;
+                        else
+                        {
+                            b3Pixel[0] = b1Pixel[0];
+                            b3Pixel[1] = b1Pixel[1];
+                            b3Pixel[2] = b1Pixel[2];
+                        }
+                    }
+                }
+
+            image1.UnlockBits(b1Data);
+            image2.UnlockBits(b2Data);
+            outBitmap.UnlockBits(outData);
+            return outBitmap;
+        }
+
         public static Bitmap kbrDiff(Bitmap image1, Bitmap image2, bool stretch)
         {
             if (image1 == null)
@@ -2346,10 +2421,12 @@ namespace pixel
                 int newW = Math.Max(image1.Width, image2.Width);
                 Bitmap newImage1 = ResizeImage(image1, newW, newH);
                 Bitmap newImage2 = ResizeImage(image2, newW, newH);
-                return kbrDiffBase(newImage1, newImage2);
+                return kbrDiffBaseFast(newImage1, newImage2);
+                //return kbrDiffBase(newImage1, newImage2);
             }
 
-            return kbrDiffBase(image1, image2);
+            return kbrDiffBaseFast(image1, image2);
+            //return kbrDiffBase(image1, image2);
         }
 
         private static int Clamp(int Value, int Max, int Min)
@@ -2361,7 +2438,7 @@ namespace pixel
         public static Bitmap ResizeImage(System.Drawing.Image image, int width, int height)
         {
             var destRect = new Rectangle(0, 0, width, height);
-            var destImage = new Bitmap(width, height);
+            var destImage = new Bitmap(width, height, image.PixelFormat);
 
             destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
 
