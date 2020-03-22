@@ -41,6 +41,12 @@ Not shown: double-clicking on either of the two images in the area marked '2' wi
 actual images, allowing you to examine them "as is" at the same size.
 
 ### History
+
+20200322:
+Performance improvements:
+1. Difference viewing is now almost instantaneous except for the largest of images.
+2. The comparison phase is now significantly faster.
+
 20200201:
 Updated the repository with the latest changes.
 
