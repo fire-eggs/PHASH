@@ -159,14 +159,22 @@ namespace pixel
         //    return null;
         //}
 
-        public class FileData
+        public struct FileData
         {
-            public string Name { get; set; }
-            public int[] Vals { get; set; }
-            public double[] FVals { get; set; }
-            public int Source { get; set; } // CID source for filtering
-            public ulong PHash { get; set; } // PHash value
-            public uint CRC { get; set; } // CRC value
+            // KBR 20200322 - changing from a class to a struct has cut the comparison time by more than 70%
+            // Made it immutable as well, no obvious evidence it makes a difference.
+            public string Name { get; }
+            public int Source { get; }
+            public ulong PHash { get; }
+            public uint CRC { get; }
+
+            public FileData(string name, int source, ulong phash, uint crc)
+            {
+                this.Name = name;
+                this.Source = source;
+                this.PHash = phash;
+                this.CRC = crc;
+            }
         };
 
         public class Pair : IComparable<Pair>
@@ -299,7 +307,6 @@ namespace pixel
                 _pairList.Sort();
                 FilterOutMatchingCID();
                 setListbox();
-                ShowStatus("Compare done");
             }
             catch (Exception ex)
             {
@@ -307,6 +314,7 @@ namespace pixel
             }
             finally
             {
+                ShowStatus("Compare done");
                 statusStrip1.BackColor = _oldColor;
             }
         }
@@ -333,7 +341,7 @@ namespace pixel
             {
                 return Image.OpenNoLock(filename);
             }
-            catch (Exception e)
+            catch
             {
                 return null;
             }
@@ -746,7 +754,7 @@ namespace pixel
 
         private void ParsePHash(string filename)
         {
-            // new variant. lines are of the form <hash>|<filepath>
+            // PHASH  variant: lines are of the form <hash>|<filepath>
             // PHASHC variant: lines of the form <hash>|<crc>|<filepath>
 
             char[] splitChars = { '|' };
@@ -787,16 +795,12 @@ namespace pixel
                                 namedex = 2;
                                 crcdex = 1;
                             }
-                            FileData fd = new FileData
-                            {
-                                Name = parts2[namedex],
-                                PHash = ulong.Parse(parts2[0]),
-                                Source = _cidCount,
-                                CRC = 0
-                            };
-                            if (crcdex != -1)
-                                fd.CRC = uint.Parse(parts2[crcdex]);
 
+                            uint crc = 0;
+                            if (crcdex != -1)
+                                crc = uint.Parse(parts2[crcdex]);
+
+                            FileData fd = new FileData(parts2[namedex], _cidCount, ulong.Parse(parts2[0]), crc);
                             if (fd.Name == null)
                                 continue;
 
@@ -825,7 +829,7 @@ namespace pixel
             }
         }
 
-        private const int PHASH_THRESHOLD = 18; // 20170110 reduce number of useless entries being added 25;
+        private const int PHASH_THRESHOLD = 17; // limits hash distance to '8'
 
         private void CompareOnePFile(int me)
         {
@@ -860,7 +864,7 @@ namespace pixel
             x -= (x >> 1) & m1;
             x = (x & m2) + ((x >> 2) & m2);
             x = (x + (x >> 4)) & m4;
-            return (int)((x * h01) >> 56);
+            return (int)(unchecked(x * h01) >> 56);
         }
 
         #region PictureBox context menu
