@@ -36,6 +36,13 @@ using namespace Gdiplus;
 #include "cimgffmpeg.h"
 #endif
 
+FILE _iob[] = { *stdin, *stdout, *stderr };
+
+extern "C" FILE * __cdecl __iob_func(void)
+{
+    return _iob;
+}
+
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
 
@@ -68,14 +75,6 @@ int ph_num_threads()
     return numCPU;
 }
 #endif
-
-#define stdin  (__acrt_iob_func(0))
-#define stdout (__acrt_iob_func(1))
-#define stderr (__acrt_iob_func(2))
-
-FILE _iob[] = { *stdin, *stdout, *stderr };
-extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
-
 
 const char phash_project[] = "%s. Copyright 2008-2010 Aetilius, Inc.";
 char phash_version[255] = {0};
@@ -642,7 +641,10 @@ int _ph_dct_dophash(CImg<uint8_t> *src, CImg<float> *C, CImg<float> *Ctransp, ul
 	CImg<float> meanfilter(7, 7, 1, 1, 1);
 	CImg<float> img;
 	if (src->spectrum() == 3){
-		img = src->RGBtoYCbCr().channel(0).get_convolve(meanfilter);
+        CImg<uint8_t> tmp = src->RGBtoYCbCr();
+        CImg<uint8_t> tmp2 = tmp.channel(0);
+        src->clear();
+		img = tmp2.get_convolve(meanfilter);
 	}
 	else if (src->spectrum() == 4){
 		int width = img.width();

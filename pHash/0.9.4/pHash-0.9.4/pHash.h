@@ -48,6 +48,7 @@
 
 
 #if defined(HAVE_IMAGE_HASH) || defined(HAVE_VIDEO_HASH)
+#pragma warning (disable : 4146)
 #define cimg_debug 0
 #define cimg_display 0
 #include "CImg.h"
