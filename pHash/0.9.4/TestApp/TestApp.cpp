@@ -5,14 +5,17 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <mutex>
 
 #include "dirent.h"
 #include <sys/stat.h>
 #include "direct.h"
 
 #include "omp.h"
+#pragma warning (disable : 4146)
 #include "CImg.h"
 using namespace cimg_library;
+
 
 #include <string>
 #include <list>
@@ -21,10 +24,10 @@ using namespace cimg_library;
 void logit(char*, char*);
 
 extern "C" {
-		extern int ph_dct_imagehash(const char* file, unsigned long long &hash);
-		extern int ph_dct_imagehashW(wchar_t *filename, unsigned long long &hash, unsigned long &crc);
+//		extern int ph_dct_imagehash(const char* file, unsigned long long &hash);
+//		extern int ph_dct_imagehashW(wchar_t *filename, unsigned long long &hash, unsigned long &crc);
 		extern int ph_dct_imagehashW2(wchar_t *filename, CImg<float> *, CImg<float> *, unsigned long long &hash, unsigned long &crc);
-		extern int gibber(const wchar_t *filename, unsigned long long &hash, unsigned long &crc);
+//		extern int gibber(const wchar_t *filename, unsigned long long &hash, unsigned long &crc);
 		int ph_hamming_distance(unsigned long long hash1, unsigned long long hash2);
 		extern void ph_startup();
 		extern void ph_shutdown();
@@ -46,6 +49,7 @@ CImg<float> dct_transpose;
 //	return hash;
 //}
 
+#if 0
 unsigned long long do_dhash(char *filename, unsigned long &crc)
 {
 	const size_t cSize = strlen(filename) + 1;
@@ -58,6 +62,7 @@ unsigned long long do_dhash(char *filename, unsigned long &crc)
 		return 0;
 	return hash;
 }
+#endif
 
 unsigned long long do_phash(char *filename, unsigned long &crc)
 {
@@ -66,11 +71,14 @@ unsigned long long do_phash(char *filename, unsigned long &crc)
 	size_t outSize;
 	mbstowcs_s(&outSize, wc, cSize, filename, cSize-1);
 
-	unsigned long long hash;
-	//if (ph_dct_imagehashW(wc, hash, crc) < 0)
-	//	return 0;
-
-	if (ph_dct_imagehashW2(wc, dct_matrix, &dct_transpose, hash, crc) < 0)
+	unsigned long long hash = 0;
+	int res = ph_dct_imagehashW2(wc, dct_matrix, &dct_transpose, hash, crc);
+	if (res == -5)
+	{
+		// In the case of memory allocation error, try again
+		res = ph_dct_imagehashW2(wc, dct_matrix, &dct_transpose, hash, crc);
+	}
+	if (res < 0)
 		return 0;
 	return hash;
 }
@@ -113,6 +121,9 @@ bool hasEnding(std::string const &fullString, std::string const &ending)
 	}
 }
 
+// locking around fprintf which appears not to be thread safe
+std::mutex mtx;
+
 // Process a file. 1. Calculate the phash. 2. Write the hash, and
 // the filestring.
 // TODO output the filestring MINUS the base path.
@@ -131,7 +142,9 @@ void processFile(char *filepath, char *basepath, FILE *fp)
 			logit("Hash fail", filepath);
 			return;
 		}
+		mtx.lock();
 		fprintf(fp, "%llu|%lu|%s\n", tmpHash, crc, filepath);
+		mtx.unlock();
 	}
 	catch (...)
 	{
@@ -203,8 +216,8 @@ void processTree(const char *path, char *basepath, FILE *fp)
 	int max = files.size();
 	if (max != 0)
 	{
-// fprintf appears not to be thread-safe 20180618
-//#pragma omp parallel for
+// try turning off to single-thread for memory
+#pragma omp parallel for
 		for (int dex = 0; dex < max; dex++)
 		{
 			processFile((char *)(files[dex].c_str()), basepath, fp);
@@ -218,7 +231,7 @@ void processTree(const char *path, char *basepath, FILE *fp)
 
 void startup() 
 { 
-//	omp_set_num_threads(2);
+	//omp_set_num_threads(2);
 	ph_startup(); 
 	dct_matrix = ph_dct_matrix(32);
 	dct_transpose = dct_matrix->get_transpose();
@@ -249,11 +262,7 @@ bool exists(const std::string& name)
 
 void doit(char *filename)
 {
-	printf("DI1");
-	
 	startup();
-	
-	printf("DI2");
 
 	FILE *fp = NULL;
 
@@ -263,32 +272,23 @@ void doit(char *filename)
 		//sprintf(filepath, "%s\\pixel.phashd", filename);
 		sprintf(filepath, "%s\\pixelLAA.phashc", filename);
 
-		printf("DI2A -");
-		printf(filepath);
-		printf("\n");
-		
-		//fopen_s(&fp, filepath, "w+");
-		fp = fopen(filepath, "w+");
-		printf("DI2A1\n");
+		fopen_s(&fp, filepath, "w+");
+		if (fp == 0)
+			return;
 		fprintf(fp, "%s\n", filename);
 
-		printf("DI2B");
-		
 		processTree("", filename, fp);
 		fclose(fp);
-		
-		printf("DI2C");
 	}
 	__finally
 	{
 		shutdown();
-		if (fp != NULL)
+		if (fp != 0)
 		{
 			fflush(fp);
 			fclose(fp);
 		}
 	}
-	printf("DI3");
 }
 
 char initial_path[260];
@@ -301,6 +301,8 @@ void logit(char *msg1, char *msg2)
 
 	FILE *fp = NULL;
 	fopen_s(&fp, logpath, "a+");
+	if (fp == 0)
+		return;
 	fprintf(fp, "%s:%s\n", msg1, msg2);
 	fflush(fp);
 	fclose(fp);
