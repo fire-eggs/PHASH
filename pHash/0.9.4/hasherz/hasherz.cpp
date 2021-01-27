@@ -242,7 +242,7 @@ const wchar_t* endings[ENDCOUNT] = { L".RAR", L".ZIP", L".7Z", L".CBR", L".CBZ",
 // 3. delete the output folder
 void processTree1(const wchar_t* path, wchar_t *basepath, FILE* fp)
 {
-	std::list<std::string> folders;
+	std::vector<std::wstring> folders;
 	std::vector<std::wstring> files;
 
 	wchar_t thispath[514];
@@ -282,8 +282,8 @@ void processTree1(const wchar_t* path, wchar_t *basepath, FILE* fp)
 			if (st.st_mode & _S_IFDIR) // recurse into subdirectories
 			{
 				wsprintf(apath, L"%ls\\%ls", path, dent->d_name);
-				processTree1(apath, basepath, fp);
-				//folders.push_back(apath);
+				//processTree1(apath, basepath, fp);
+				folders.push_back(apath);
 			}
 			else
 			{
@@ -331,6 +331,11 @@ void processTree1(const wchar_t* path, wchar_t *basepath, FILE* fp)
 			//printf(be.what());
 			//printf("\n");
 		}
+	}
+
+	for (int i = 0; i < folders.size(); i++)
+	{
+		processTree1(folders[i].c_str(), basepath, fp);
 	}
 }
 
