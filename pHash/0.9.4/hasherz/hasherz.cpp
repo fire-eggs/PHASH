@@ -236,6 +236,56 @@ void deleteDirectoryContents(const std::string& dir_path)
 		fs::remove_all(entry.path());
 }
 
+void processArchives(std::vector<std::wstring> files, FILE *fp)
+{
+	fs::create_directory(TEMPDIR);
+	for (int i = 0; i < files.size(); i++)  // each archive
+	{
+		fs::path archpath(files[i]);
+
+		logit(L"PA:", (wchar_t*)files[i].c_str());
+
+		// extract files to folder of form E:\tmp\<zipfile>
+		wchar_t outpathW[1024];
+		wsprintf(outpathW, L"%ls\\%ls", TEMPDIRW, archpath.stem().c_str());
+		fs::create_directory(outpathW);
+
+		//std::string op = outpath;
+		//std::wstring outpathW(op.begin(), op.end());
+
+		try
+		{
+			std::wstring ePath(files[i].begin(), files[i].end());
+			if (hasEnding(files[i], L".RAR") || hasEnding(files[i], L".CBR"))
+				extrRar->extract(ePath, outpathW);
+			if (hasEnding(files[i], L".ZIP") || hasEnding(files[i], L".CBZ"))
+				extrZip->extract(ePath, outpathW);
+			if (hasEnding(files[i], L".7Z") || hasEnding(files[i], L".CB7"))
+				extr7z->extract(ePath, outpathW);
+
+			// process all image files in the archive
+			//processTree(outpathW.c_str(), (wchar_t*)L"", files[i].c_str(), fp);
+			//processTree(NULL, (wchar_t *)outpathW.c_str(), files[i].c_str(), fp);
+			processTree(NULL, outpathW, files[i].c_str(), fp);
+		}
+		catch (const BitException& be)
+		{
+			logit(L"Failed to extract from :", (wchar_t *)files[i].c_str());
+		}
+
+		fflush(fp);
+
+		// 20110215 delete failing when GIF file encountered (locked?)
+		try
+		{
+			deleteDirectoryContents(outpathW);
+			// TODO delete directory outpath
+			deleteDirectoryContents((wchar_t*)TEMPDIRW);
+		}
+		catch (...) {}
+	}
+}
+
 #define ENDCOUNT 6
 const wchar_t* endings[ENDCOUNT] = { L".RAR", L".ZIP", L".7Z", L".CBR", L".CBZ", L".CB7" };
 
@@ -311,30 +361,7 @@ void processTree1(const wchar_t* path, wchar_t *basepath, FILE* fp)
 
 	// testing
 	//printf("%s: %d archives found\n", thispath, (int)files.size());
-
-	fs::create_directory(TEMPDIR);
-	for (int i = 0; i < files.size(); i++)
-	{
-		try 
-		{
-			std::wstring ePath(files[i].begin(), files[i].end());
-			if (hasEnding(files[i], L".RAR") || hasEnding(files[i], L".CBR"))
-				extrRar->extract(ePath, TEMPDIRW);
-			if (hasEnding(files[i], L".ZIP") || hasEnding(files[i], L".CBZ"))
-				extrZip->extract(ePath, TEMPDIRW);
-			if (hasEnding(files[i], L".7Z") || hasEnding(files[i], L".CB7"))
-				extr7z->extract(ePath, TEMPDIRW);
-
-			processTree(TEMPDIRW, (wchar_t *)L"", files[i].c_str(), fp);
-			deleteDirectoryContents(TEMPDIR);
-		}
-		catch (const BitException& be)
-		{
-			logit("Failed to extract from %s", (char*)(files[i].c_str()));
-			//printf(be.what());
-			//printf("\n");
-		}
-	}
+	processArchives(files, fp);
 
 	for (int i = 0; i < folders.size(); i++)
 	{
