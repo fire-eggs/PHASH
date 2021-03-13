@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pHash", "pHash.vcxproj", "{1A4E5682-AA5E-41E6-9C0D-CC85D3A3D547}"
 EndProject
@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestApp", "..\TestApp\TestA
 	ProjectSection(ProjectDependencies) = postProject
 		{1A4E5682-AA5E-41E6-9C0D-CC85D3A3D547} = {1A4E5682-AA5E-41E6-9C0D-CC85D3A3D547}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hasherz", "..\hasherz\hasherz.vcxproj", "{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,8 +36,19 @@ Global
 		{3A9551EF-F9AB-4C9C-93EC-CA5286BD3C6C}.Release|Win32.Build.0 = Release|Win32
 		{3A9551EF-F9AB-4C9C-93EC-CA5286BD3C6C}.Release|x64.ActiveCfg = Release|x64
 		{3A9551EF-F9AB-4C9C-93EC-CA5286BD3C6C}.Release|x64.Build.0 = Release|x64
+		{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}.Debug|Win32.Build.0 = Debug|Win32
+		{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}.Debug|x64.ActiveCfg = Debug|x64
+		{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}.Debug|x64.Build.0 = Debug|x64
+		{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}.Release|Win32.ActiveCfg = Release|Win32
+		{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}.Release|Win32.Build.0 = Release|Win32
+		{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}.Release|x64.ActiveCfg = Release|x64
+		{6AA9FA6D-290D-407C-AB85-34ADB95B9CB5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {484108EB-C9ED-4573-80B0-449A8F5F2FAC}
 	EndGlobalSection
 EndGlobal
