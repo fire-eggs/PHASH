@@ -116,7 +116,7 @@ std::mutex mtx;
 void processFile(std::wstring fpath, const wchar_t *basepath, const wchar_t* zipfile, FILE *fp)
 {
 	const wchar_t* filepath = fpath.c_str();
-	int len = wcslen(TEMPDIRW) + 1; // include trailing slash
+	int len = wcslen(basepath) + 1; // include trailing slash
 
 	if (wcsstr(filepath, L"phashc") != NULL)
 		return;
@@ -162,13 +162,16 @@ void processTree(const wchar_t *path, wchar_t *basepath, const wchar_t* zipfile,
 	wchar_t thispath[514];
 	wchar_t apath[514];
 
-	_TDIR *srcdir;
+	_TDIR *srcdir = NULL;
 
 	printf("%ls\n", zipfile);
 
 	try
 	{
-		wsprintf(thispath, L"%ls%ls", basepath, path);
+		if (path == NULL)
+			wsprintf(thispath, L"%ls", basepath);
+		else
+			wsprintf(thispath, L"%ls\\%ls", basepath, path);
 
 		struct _tdirent *dent;
 		srcdir = _topendir(thispath);
@@ -194,8 +197,9 @@ void processTree(const wchar_t *path, wchar_t *basepath, const wchar_t* zipfile,
 
 			if (st.st_mode & _S_IFDIR) // recurse into subdirectories
 			{
-				wsprintf(apath, L"%ls\\%ls", path, dent->d_name);
-				folders.push_back(apath);
+				//wsprintf(apath, L"%ls\\%ls", path, dent->d_name);
+				//folders.push_back(apath);
+				folders.push_back(dent->d_name);
 				//			processTree(apath, basepath, fp);
 			}
 			else
@@ -218,19 +222,21 @@ void processTree(const wchar_t *path, wchar_t *basepath, const wchar_t* zipfile,
 	logit("File count:", itoa(max,buff,10));
 	if (max != 0)
 	{
-//#pragma omp parallel for
+#ifndef _DEBUG
+#pragma omp parallel for
+#endif
 		for (int dex = 0; dex < max; dex++)
 		{
-			processFile(files[dex].c_str(), TEMPDIRW, zipfile, fp);
+			processFile(files[dex].c_str(), basepath, zipfile, fp);
 		}
 	}
 	for (std::list<std::wstring>::iterator it = folders.begin(); it != folders.end(); ++it)
 	{
-		processTree((*it).c_str(), basepath, zipfile, fp);
+		processTree((*it).c_str(), (wchar_t *)basepath, zipfile, fp);
 	}
 }
 
-void deleteDirectoryContents(const std::string& dir_path)
+void deleteDirectoryContents(wchar_t *dir_path) //const std::wstring& dir_path)
 {
 	for (const auto& entry : fs::directory_iterator(dir_path))
 		fs::remove_all(entry.path());
@@ -301,7 +307,7 @@ void processTree1(const wchar_t* path, wchar_t *basepath, FILE* fp)
 	wchar_t thispath[514];
 	wchar_t apath[514];
 
-	_TDIR* srcdir;
+	_TDIR* srcdir = NULL;
 	try
 	{
 		wsprintf(thispath, L"%s%s", basepath, path);
