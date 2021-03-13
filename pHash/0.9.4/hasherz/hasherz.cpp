@@ -16,6 +16,7 @@ namespace fs = std::filesystem;
 #pragma warning (disable : 4146)
 #pragma warning (disable : 4267)
 #pragma warning (disable : 4244)
+#pragma warning (disable : 4319)
 #include "CImg.h"
 using namespace cimg_library;
 
@@ -134,7 +135,7 @@ void processFile(std::wstring fpath, const wchar_t *basepath, const wchar_t* zip
 	}
 	catch (...)
 	{
-		logit(L"processFile Except: %s", (wchar_t *)filepath);
+		logit(L"processFile Except:", (wchar_t *)filepath);
 		printf("processFile Except: %ls\n", filepath);
 		return;
 	}
@@ -213,6 +214,8 @@ void processTree(const wchar_t *path, wchar_t *basepath, const wchar_t* zipfile,
 	}
 
 	int max = files.size();
+	char buff[10];
+	logit("File count:", itoa(max,buff,10));
 	if (max != 0)
 	{
 //#pragma omp parallel for
@@ -301,7 +304,7 @@ void processTree1(const wchar_t* path, wchar_t *basepath, FILE* fp)
 	}
 	catch (...)
 	{
-		printf("readdir exception %ls\n", thispath);
+		logit(L"readdir exception %ls\n", thispath);
 		if (srcdir != NULL)
 			_tclosedir(srcdir);
 	}
@@ -396,6 +399,7 @@ void doit(char *filename)
 			fwprintf(fp, L"%ls\n", wc);
 			processTree1(L"", wc, fp);
 			fclose(fp);
+			fp = 0;
 		}
 	}
 	__finally
